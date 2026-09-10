@@ -1,0 +1,12 @@
+name: brilliant
+description: >
+  Implementación del juego de roll & write "Brilliant" (tablero 7x7),
+  siguiendo la máquina de estados: Inicial -> Turno -> Fin.
+version: 0.1.0
+publish_to: "none"
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dev_dependencies:
+  test: ^1.25.0
