@@ -23,18 +23,18 @@ class Celda {
 
 
 class Posicion {
-  final int fila; // 0..6
-  final int columna; // 0..6
+  final int x; 
+  final int y; 
 
-  const Posicion(this.fila, this.columna);
+  const Posicion(this.x, this.y);
 
   @override
   bool operator ==(Object other) =>
-      other is Posicion && other.fila == fila && other.columna == columna;
+      other is Posicion && other.x == x && other.y == y;
 
   @override
-  int get hashCode => Object.hash(fila, columna);
+  int get hashCode => Object.hash(x, y);
 
   @override
-  String toString() => '($fila, $columna)';
+  String toString() => '(x: $x,y:  $y)';
 }

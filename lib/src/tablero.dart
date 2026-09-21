@@ -1,4 +1,5 @@
 import 'celda.dart';
+import 'tipo.dart';
 
 enum Bloque {
   bloque1,
@@ -14,26 +15,31 @@ class Tablero {
  
   final Map<Posicion, Bloque> bloquePorPosicion;
  
-  Tablero({required this.celdas, required this.bloquePorPosicion})
+  Tablero({required this.celdas, required this.bloquePorPosicion, 
+  this.tipoPorBloque = const {},
+  })
       : assert(celdas.length == tamano,
             'El tablero debe tener $tamano filas'),
         assert(celdas.every((fila) => fila.length == tamano),
             'Cada fila del tablero debe tener $tamano columnas');
  
-  factory Tablero.vacio(Map<Posicion, Bloque> bloquePorPosicion) {
+  factory Tablero.vacio(Map<Posicion, Bloque> bloquePorPosicion, {
+    Map<Bloque, Tipo> tipoPorBloque = const {},
+  }) {
     return Tablero(
       celdas: List.generate(
         tamano,
         (_) => List.generate(tamano, (_) => const Celda.vacia()),
       ),
       bloquePorPosicion: bloquePorPosicion,
+      tipoPorBloque: tipoPorBloque,
     );
   }
  
-  Celda celdaEn(Posicion posicion) => celdas[posicion.fila][posicion.columna];
+  Celda celdaEn(Posicion posicion) => celdas[posicion.y][posicion.x];
  
   void colocarNumero(Posicion posicion, int valor) {
-    celdas[posicion.fila][posicion.columna] = Celda.ocupada(valor);
+    celdas[posicion.y][posicion.x] = Celda.ocupada(valor);
   }
 
   List<int> valoresDeBloque(Bloque bloque) {
@@ -66,4 +72,13 @@ class Tablero {
         .where((bloque) => bloqueEstaLleno(bloque))
         .toList();
   }
+
+  Tipo? tipoDe(Bloque bloque) => tipoPorBloque[bloque];
+
+  Color? colorDe(Bloque bloque) => tipoDe(bloque)?.color;
+
+  List<Bloque> bloquesDeColor(Color color) => tipoPorBloque.entries
+      .where((entry) => entry.value.color == color)
+      .map((entry) => entry.key)
+      .toList();
 }
