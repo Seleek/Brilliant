@@ -15,8 +15,12 @@ class Tablero {
  
   final Map<Posicion, Bloque> bloquePorPosicion;
  
+ final Map<Bloque, Tipo> tipoPorBloque;
+
+ final Set<Posicion> posicionesIniciales;
+
   Tablero({required this.celdas, required this.bloquePorPosicion, 
-  this.tipoPorBloque = const {},
+  this.tipoPorBloque = const {}, this.posicionesIniciales = const {},
   })
       : assert(celdas.length == tamano,
             'El tablero debe tener $tamano filas'),
@@ -24,7 +28,7 @@ class Tablero {
             'Cada fila del tablero debe tener $tamano columnas');
  
   factory Tablero.vacio(Map<Posicion, Bloque> bloquePorPosicion, {
-    Map<Bloque, Tipo> tipoPorBloque = const {},
+    Map<Bloque, Tipo> tipoPorBloque = const {},  Set<Posicion> posicionesIniciales = const {},
   }) {
     return Tablero(
       celdas: List.generate(
@@ -33,10 +37,23 @@ class Tablero {
       ),
       bloquePorPosicion: bloquePorPosicion,
       tipoPorBloque: tipoPorBloque,
+      posicionesIniciales: posicionesIniciales,
     );
   }
- 
-  Celda celdaEn(Posicion posicion) => celdas[posicion.y][posicion.x];
+
+  bool get bloqueadoPorValoresIniciales => posicionesIniciales
+      .any((posicion) => celdaEn(posicion).estaVacia);
+    
+  bool puedeColocarEn(Posicion posicion) {
+    if (!bloqueadoPorValoresIniciales) return true;
+    return posicionesIniciales.contains(posicion);
+  }
+
+  bool intentarColocarNumero(Posicion posicion, int valor) {
+    if (!puedeColocarEn(posicion)) return false;
+    colocarNumero(posicion, valor);
+    return true;
+  }
  
   void colocarNumero(Posicion posicion, int valor) {
     celdas[posicion.y][posicion.x] = Celda.ocupada(valor);
