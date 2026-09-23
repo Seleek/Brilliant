@@ -14,13 +14,15 @@ class ColocarNumero extends TableroEvento {
 class TableroEstado {
   final Tablero tablero;
 
+  final bool bloqueadoPorValoresIniciales;
+
   final String? mensajeError;
 
   const TableroEstado({
     required this.tablero,
     required this.bloqueadoPorValoresIniciales,
     this.mensajeError,
-  })
+  });
 }
 
 class TableroBloc{

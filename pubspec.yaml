@@ -10,3 +10,6 @@ environment:
 
 dev_dependencies:
   test: ^1.25.0
+dependencies:
+  flutter:
+    sdk: flutter

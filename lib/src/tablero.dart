@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'celda.dart';
 import 'tipo.dart';
 
@@ -40,6 +41,8 @@ class Tablero {
       posicionesIniciales: posicionesIniciales,
     );
   }
+
+  Celda celdaEn(Posicion posicion) => celdas[posicion.y][posicion.x];
 
   bool get bloqueadoPorValoresIniciales => posicionesIniciales
       .any((posicion) => celdaEn(posicion).estaVacia);

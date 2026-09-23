@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'reglas/regla_todos_diferentes.dart';
 import 'reglas/regla_todos_iguales.dart';
 import 'reglas/regla_zona_verde.dart';
