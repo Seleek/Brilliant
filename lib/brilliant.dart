@@ -7,3 +7,6 @@ export 'src/reglas/regla_zona_verde.dart';
 export 'src/reglas/regla_morado.dart';
 export 'src/tablero.dart';
 export 'src/tablero_bloc.dart';
+export 'src/ui/tablero_widget.dart';
+export 'src/puntuacion.dart';
+export 'src/ui/tablero_view.dart';

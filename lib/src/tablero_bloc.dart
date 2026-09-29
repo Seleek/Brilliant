@@ -37,7 +37,7 @@ class TableroBloc{
 
 TableroEstado get estadoActual => _estadoActual;
 
-Stream<TableroEstado> get estadoStream => _estadoController.stream;
+Stream<TableroEstado> get estado => _estadoController.stream;
 
 void agregar (TableroEvento evento) {
   if (evento is ColocarNumero) {

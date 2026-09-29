@@ -3,13 +3,13 @@
   "packages": [
     {
       "name": "_fe_analyzer_shared",
-      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/_fe_analyzer_shared-105.0.0",
+      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/_fe_analyzer_shared-108.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.11"
     },
     {
       "name": "analyzer",
-      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/analyzer-14.1.0",
+      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/analyzer-14.4.0",
       "packageUri": "lib/",
       "languageVersion": "3.11"
     },
@@ -129,7 +129,7 @@
     },
     {
       "name": "meta",
-      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/meta-1.19.0",
+      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/meta-1.18.3",
       "packageUri": "lib/",
       "languageVersion": "3.5"
     },
@@ -243,19 +243,19 @@
     },
     {
       "name": "test",
-      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/test-1.31.2",
+      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/test-1.32.0",
       "packageUri": "lib/",
       "languageVersion": "3.11"
     },
     {
       "name": "test_api",
-      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/test_api-0.7.13",
+      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/test_api-0.7.14",
       "packageUri": "lib/",
       "languageVersion": "3.11"
     },
     {
       "name": "test_core",
-      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/test_core-0.6.19",
+      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/test_core-0.6.20",
       "packageUri": "lib/",
       "languageVersion": "3.11"
     },
@@ -267,7 +267,7 @@
     },
     {
       "name": "vector_math",
-      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/vector_math-2.4.3",
+      "rootUri": "file:///C:/Users/Yatzi/AppData/Local/Pub/Cache/hosted/pub.dev/vector_math-2.4.0",
       "packageUri": "lib/",
       "languageVersion": "3.10"
     },
