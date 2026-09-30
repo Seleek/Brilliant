@@ -11,6 +11,12 @@ class ColocarNumero extends TableroEvento {
   ColocarNumero(this.posicion, this.valor);
 }
 
+class SeleccionarCelda extends TableroEvento {
+  final Posicion posicion;
+
+  SeleccionarCelda(this.posicion);
+}
+
 class TableroEstado {
   final Tablero tablero;
 
@@ -18,10 +24,13 @@ class TableroEstado {
 
   final String? mensajeError;
 
+  final Posicion? posicionSeleccionada;
+
   const TableroEstado({
     required this.tablero,
     required this.bloqueadoPorValoresIniciales,
     this.mensajeError,
+    this.posicionSeleccionada,
   });
 }
 
@@ -30,6 +39,8 @@ class TableroBloc{
   final _estadoController = StreamController<TableroEstado>.broadcast();
 
   late TableroEstado _estadoActual;
+
+  Posicion? _posicionSeleccionada;
 
   TableroBloc(this._tablero) {
     _estadoActual = _construirEstado();
@@ -42,7 +53,14 @@ Stream<TableroEstado> get estado => _estadoController.stream;
 void agregar (TableroEvento evento) {
   if (evento is ColocarNumero) {
     _manejarColocarNumero(evento);
+  } else if(evento is SeleccionarCelda) {
+    _manejarSeleccionarCelda(evento);
   }
+}
+
+void _manejarSeleccionarCelda(SeleccionarCelda evento) {
+  _posicionSeleccionada = evento.posicion;
+  _actualizarEstado();
 }
 
 void _manejarColocarNumero (ColocarNumero evento){
@@ -66,6 +84,7 @@ void _actualizarEstado({String? mensajeError}) {
         tablero: _tablero,
         bloqueadoPorValoresIniciales: _tablero.bloqueadoPorValoresIniciales,
         mensajeError: mensajeError,
+        posicionSeleccionada: _posicionSeleccionada,
       );
        void dispose() {
     _estadoController.close();
