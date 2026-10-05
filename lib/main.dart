@@ -30,7 +30,9 @@ class _PantallaTableroState extends State<PantallaTablero> {
   @override
   void initState() {
     super.initState();
-    _bloc = TableroBloc(Tablero.vacio(const {}));
+    _bloc = TableroBloc(Tablero.vacio(const {}),
+    numerosEnMano: [1, 2, 3, 4, 5, 6],
+    );
   }
  
   @override
@@ -50,9 +52,19 @@ class _PantallaTableroState extends State<PantallaTablero> {
               width: 420,
               child: TableroWidget(bloc: _bloc),
             );
-            const panel = PanelMano(
-              numerosEnMano: [1, 2, 3, 4, 5, 6],
-              indiceSeleccionado: 1,
+
+            final panel = StreamBuilder<TableroEstado>(
+              stream: _bloc.estado,
+              initialData: _bloc.estadoActual,
+              builder:(context, snapshot){
+                final estado = snapshot.data!;
+                return PanelMano(
+                  numerosEnMano: estado.numerosEnMano,
+                  indiceSeleccionado: estado.indiceNumeroSeleccionado,
+                  onNumeroTocado: (indice) => _bloc.agregar(SeleccionarNumeroDeMano(indice)),
+                  onColocarFicha: () => _bloc.agregar(ColocarFicha()),
+                );
+              }
             );
  
             final esAncho = constraints.maxWidth >= 700;

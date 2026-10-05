@@ -17,6 +17,14 @@ class SeleccionarCelda extends TableroEvento {
   SeleccionarCelda(this.posicion);
 }
 
+class SeleccionarNumeroDeMano extends TableroEvento {
+  final int indiceEnMano;
+
+  SeleccionarNumeroDeMano(this.indiceEnMano);
+}
+
+class ColocarFicha extends TableroEvento{}
+
 class TableroEstado {
   final Tablero tablero;
 
@@ -26,23 +34,34 @@ class TableroEstado {
 
   final Posicion? posicionSeleccionada;
 
+  final List<int> numerosEnMano;
+
+  final int? indiceNumeroSeleccionado;
+
   const TableroEstado({
     required this.tablero,
     required this.bloqueadoPorValoresIniciales,
     this.mensajeError,
     this.posicionSeleccionada,
+    this.numerosEnMano = const [],
+    this.indiceNumeroSeleccionado,
   });
 }
 
 class TableroBloc{
   final Tablero _tablero;
+  final List<int> _numerosEnMano;
+
   final _estadoController = StreamController<TableroEstado>.broadcast();
 
   late TableroEstado _estadoActual;
 
   Posicion? _posicionSeleccionada;
 
-  TableroBloc(this._tablero) {
+  int? _indiceNumeroSeleccionado;
+
+  TableroBloc(this._tablero, {List<int> numerosEnMano = const []})
+      : _numerosEnMano = numerosEnMano {
     _estadoActual = _construirEstado();
 }
 
@@ -55,12 +74,48 @@ void agregar (TableroEvento evento) {
     _manejarColocarNumero(evento);
   } else if(evento is SeleccionarCelda) {
     _manejarSeleccionarCelda(evento);
+  }else if(evento is SeleccionarNumeroDeMano) {
+    _manejarSeleccionarNumeroDeMano(evento);
+  } else if(evento is ColocarFicha) {
+    _manejarColocarFicha();
   }
 }
 
 void _manejarSeleccionarCelda(SeleccionarCelda evento) {
   _posicionSeleccionada = evento.posicion;
   _actualizarEstado();
+}
+
+int? _indiceNumeroPorDefecto(){
+  if(_numerosEnMano.isEmpty) return null;
+  final indiceDelUno = _numerosEnMano.indexOf(1);
+  return indiceDelUno != -1 ? indiceDelUno : 0;
+}
+
+void _manejarSeleccionarNumeroDeMano(SeleccionarNumeroDeMano evento){
+  if(evento.indiceEnMano < 0 || evento.indiceEnMano >= _numerosEnMano.length){
+    return;
+  }
+  _indiceNumeroSeleccionado = evento.indiceEnMano;
+  _actualizarEstado();
+}
+
+void _manejarColocarFicha(){
+  if(_posicionSeleccionada == null || _indiceNumeroSeleccionado == null){
+    _actualizarEstado(mensajeError: 'Selecciona primero una celda y un numero',);
+    return;
+  }
+
+  final valor = _numerosEnMano[_indiceNumeroSeleccionado!];
+  final exito = _tablero.intentarColocarNumero(_posicionSeleccionada!, valor);
+
+  final mensajeError = exito
+  ? null
+  : (_tablero.bloqueadoPorValoresIniciales
+  ? 'Primero debes completar los valores iniciales'
+  : 'No coloques el numero ahi mdfk');
+
+  _actualizarEstado(mensajeError: mensajeError);
 }
 
 void _manejarColocarNumero (ColocarNumero evento){
@@ -85,6 +140,8 @@ void _actualizarEstado({String? mensajeError}) {
         bloqueadoPorValoresIniciales: _tablero.bloqueadoPorValoresIniciales,
         mensajeError: mensajeError,
         posicionSeleccionada: _posicionSeleccionada,
+        numerosEnMano: _numerosEnMano,
+        indiceNumeroSeleccionado: _indiceNumeroSeleccionado,
       );
        void dispose() {
     _estadoController.close();
