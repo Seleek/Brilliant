@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'brilliant.dart';
 
 void main() {
@@ -7,7 +8,7 @@ void main() {
 
 class BrilliantApp extends StatelessWidget {
   const BrilliantApp({super.key});
- 
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -16,31 +17,34 @@ class BrilliantApp extends StatelessWidget {
     );
   }
 }
- 
+
 class PantallaTablero extends StatefulWidget {
   const PantallaTablero({super.key});
- 
+
   @override
   State<PantallaTablero> createState() => _PantallaTableroState();
 }
- 
+
 class _PantallaTableroState extends State<PantallaTablero> {
   late final TableroBloc _bloc;
- 
+  late final Map<Posicion, Tipo> _tipoPorPosicion;
+
   @override
   void initState() {
     super.initState();
-    _bloc = TableroBloc(Tablero.vacio(const {}),
-    numerosEnMano: [1, 2, 3, 4, 5, 6],
+    _bloc = TableroBloc(
+      Tablero.vacio(const {}),
+      numerosEnMano: const [1, 2, 2, 3, 4, 6],
     );
+    _tipoPorPosicion = construirTipoPorPosicionOficial();
   }
- 
+
   @override
   void dispose() {
     _bloc.dispose();
     super.dispose();
   }
- 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,27 +54,30 @@ class _PantallaTableroState extends State<PantallaTablero> {
           builder: (context, constraints) {
             final tablero = SizedBox(
               width: 420,
-              child: TableroWidget(bloc: _bloc),
+              child: TableroWidget(
+                bloc: _bloc,
+                tipoPorPosicion: _tipoPorPosicion,
+              ),
             );
 
             final panel = StreamBuilder<TableroEstado>(
               stream: _bloc.estado,
               initialData: _bloc.estadoActual,
-              builder:(context, snapshot){
+              builder: (context, snapshot) {
                 final estado = snapshot.data!;
                 return PanelMano(
                   numerosEnMano: estado.numerosEnMano,
                   indiceSeleccionado: estado.indiceNumeroSeleccionado,
-                  onNumeroTocado: (indice) => _bloc.agregar(SeleccionarNumeroDeMano(indice)),
+                  onNumeroTocado: (indice) =>
+                      _bloc.agregar(SeleccionarNumeroDeMano(indice)),
                   onColocarFicha: () => _bloc.agregar(ColocarFicha()),
                 );
-              }
+              },
             );
- 
-            final esAncho = constraints.maxWidth >= 700;
- 
-            if (esAncho) {
 
+            final esAncho = constraints.maxWidth >= 700;
+
+            if (esAncho) {
               return Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -92,7 +99,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
                 ),
               );
             }
- 
+
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Center(

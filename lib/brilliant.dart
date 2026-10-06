@@ -11,3 +11,5 @@ export 'src/ui/tablero_widget.dart';
 export 'src/puntuacion.dart';
 export 'src/ui/tablero_view.dart';
 export 'src/ui/panel_mano_widget.dart';
+export 'src/datos/layout_tablero_oficial.dart';
+export 'src/tipo.dart';
