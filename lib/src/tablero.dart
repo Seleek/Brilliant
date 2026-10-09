@@ -26,7 +26,7 @@ class Tablero {
       : assert(celdas.length == tamano,
             'El tablero debe tener $tamano filas'),
         assert(celdas.every((fila) => fila.length == tamano),
-            'Cada fila del tablero debe tener $tamano columnas');
+            'Cada fila del tablero debe tener $tamano columnas (eje x)');
  
   factory Tablero.vacio(Map<Posicion, Bloque> bloquePorPosicion, {
     Map<Bloque, Tipo> tipoPorBloque = const {},  Set<Posicion> posicionesIniciales = const {},
@@ -60,6 +60,16 @@ class Tablero {
  
   void colocarNumero(Posicion posicion, int valor) {
     celdas[posicion.y][posicion.x] = Celda.ocupada(valor);
+  }
+
+  List<int> valoresIniciales({Posicion? excluyendo}){
+    final valores = <int>[];
+    for (final posicion in posicionesIniciales){
+      if (posicion == excluyendo) continue;
+      final celda = celdaEn(posicion);
+      if (celda.estaOcupada) valores.add(celda.valor!);
+    }
+    return valores;
   }
 
   List<int> valoresDeBloque(Bloque bloque) {

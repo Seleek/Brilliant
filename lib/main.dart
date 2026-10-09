@@ -32,9 +32,13 @@ class _PantallaTableroState extends State<PantallaTablero> {
   @override
   void initState() {
     super.initState();
+
+    final posicionesIniciales =
+        generarPosicionesInicialesAleatorias(semilla: 42);
+
     _bloc = TableroBloc(
-      Tablero.vacio(const {}),
-      numerosEnMano: const [1, 2, 2, 3, 4, 6],
+      Tablero.vacio(const {}, posicionesIniciales: posicionesIniciales),
+      numerosEnMano: const [1, 2, 3, 4, 5, 6],
     );
     _tipoPorPosicion = construirTipoPorPosicionOficial();
   }
@@ -75,6 +79,11 @@ class _PantallaTableroState extends State<PantallaTablero> {
               },
             );
 
+            final boton = Align(
+              alignment: Alignment.centerLeft,
+              child: BotonIniciar(bloc: _bloc),
+            );
+
             final esAncho = constraints.maxWidth >= 700;
 
             if (esAncho) {
@@ -91,7 +100,14 @@ class _PantallaTableroState extends State<PantallaTablero> {
                         alignment: Alignment.topCenter,
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 320),
-                          child: panel,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              panel,
+                              const SizedBox(height: 16),
+                              boton,
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -108,6 +124,8 @@ class _PantallaTableroState extends State<PantallaTablero> {
                     tablero,
                     const SizedBox(height: 16),
                     panel,
+                    const SizedBox(height: 16),
+                    boton,
                   ],
                 ),
               ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'celda.dart';
 import 'tablero.dart';
+import 'reglas/regla_todos_diferentes.dart';
 
 abstract class TableroEvento {}
 
@@ -25,6 +26,8 @@ class SeleccionarNumeroDeMano extends TableroEvento {
 
 class ColocarFicha extends TableroEvento{}
 
+class   IniciarPartida extends TableroEvento{}
+
 class TableroEstado {
   final Tablero tablero;
 
@@ -38,6 +41,8 @@ class TableroEstado {
 
   final int? indiceNumeroSeleccionado;
 
+  final bool partidaIniciada;
+
   const TableroEstado({
     required this.tablero,
     required this.bloqueadoPorValoresIniciales,
@@ -45,7 +50,11 @@ class TableroEstado {
     this.posicionSeleccionada,
     this.numerosEnMano = const [],
     this.indiceNumeroSeleccionado,
+    this.partidaIniciada = false,
   });
+
+  bool get puedeIniciarPartida =>
+  !bloqueadoPorValoresIniciales && !partidaIniciada;
 }
 
 class TableroBloc{
@@ -59,6 +68,8 @@ class TableroBloc{
   Posicion? _posicionSeleccionada;
 
   int? _indiceNumeroSeleccionado;
+
+  bool _partidaIniciada = false;
 
   TableroBloc(this._tablero, {List<int> numerosEnMano = const []})
       : _numerosEnMano = numerosEnMano {
@@ -78,6 +89,8 @@ void agregar (TableroEvento evento) {
     _manejarSeleccionarNumeroDeMano(evento);
   } else if(evento is ColocarFicha) {
     _manejarColocarFicha();
+  } else if(evento is IniciarPartida) {
+    _manejarIniciarPartida();
   }
 }
 
@@ -130,6 +143,32 @@ void _manejarColocarNumero (ColocarNumero evento){
   _actualizarEstado(mensajeError: mensajeError);
 }
 
+String? _intentarColocarValidado(Posicion posicion, int valor){
+  final esPosicionInicial = _tablero.posicionesIniciales.contains(posicion); 
+
+  if(esPosicionInicial && _partidaIniciada){
+    return 'No puedes modificar los valores';
+  }
+
+  if(esPosicionInicial){
+    final valoresExistentes = 
+    _tablero.valoresIniciales(excluyendo: posicion);
+
+    if(!cumpleReglaTodosDiferentes(valoresExistentes, valor)){
+      return 'No puedes repetir valores iniciales';
+    }
+  }
+}
+
+void _manejarIniciarPartida(){ 
+  if(_tablero.bloqueadoPorValoresIniciales){
+    _actualizarEstado(mensajeError: 'Completa primero los valores iniciales');
+    return;
+  }
+  _partidaIniciada=true;
+  _actualizarEstado();
+}
+
 void _actualizarEstado({String? mensajeError}) {
     _estadoActual = _construirEstado(mensajeError: mensajeError);
     _estadoController.add(_estadoActual);
@@ -142,6 +181,7 @@ void _actualizarEstado({String? mensajeError}) {
         posicionSeleccionada: _posicionSeleccionada,
         numerosEnMano: _numerosEnMano,
         indiceNumeroSeleccionado: _indiceNumeroSeleccionado,
+        partidaIniciada: _partidaIniciada,
       );
        void dispose() {
     _estadoController.close();
