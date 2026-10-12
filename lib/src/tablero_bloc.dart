@@ -42,6 +42,8 @@ class TableroEstado {
   final int? indiceNumeroSeleccionado;
 
   final bool partidaIniciada;
+  
+  final bool valoresInicialesValidos;
 
   const TableroEstado({
     required this.tablero,
@@ -51,10 +53,11 @@ class TableroEstado {
     this.numerosEnMano = const [],
     this.indiceNumeroSeleccionado,
     this.partidaIniciada = false,
+    this.valoresInicialesValidos = false,
   });
 
   bool get puedeIniciarPartida =>
-  !bloqueadoPorValoresIniciales && !partidaIniciada;
+  valoresInicialesValidos && !partidaIniciada;
 }
 
 class TableroBloc{
@@ -114,50 +117,48 @@ void _manejarSeleccionarNumeroDeMano(SeleccionarNumeroDeMano evento){
 }
 
 void _manejarColocarFicha(){
-  if(_posicionSeleccionada == null || _indiceNumeroSeleccionado == null){
-    _actualizarEstado(mensajeError: 'Selecciona primero una celda y un numero',);
-    return;
-  }
+   if (_posicionSeleccionada == null || _indiceNumeroSeleccionado == null) {
+      _actualizarEstado(
+        mensajeError: 'Selecciona primero una celda y un número',
+      );
+      return;
+    }
 
-  final valor = _numerosEnMano[_indiceNumeroSeleccionado!];
-  final exito = _tablero.intentarColocarNumero(_posicionSeleccionada!, valor);
+    final valor = _numerosEnMano[_indiceNumeroSeleccionado!];
+    final mensajeError =
+        _intentarColocarValidado(_posicionSeleccionada!, valor);
+    _actualizarEstado(mensajeError: mensajeError);
 
-  final mensajeError = exito
-  ? null
-  : (_tablero.bloqueadoPorValoresIniciales
-  ? 'Primero debes completar los valores iniciales'
-  : 'No coloques el numero ahi mdfk');
-
-  _actualizarEstado(mensajeError: mensajeError);
 }
 
 void _manejarColocarNumero (ColocarNumero evento){
-  final exito = _tablero.intentarColocarNumero(evento.posicion, evento.valor);
-
-  final mensajeError = exito
-  ? null
-  : (_tablero.bloqueadoPorValoresIniciales 
-  ? 'Primero debes completar los valores iniciales'
-  : 'No coloques el numero ahi mdfk');
-
-  _actualizarEstado(mensajeError: mensajeError);
-}
-
-String? _intentarColocarValidado(Posicion posicion, int valor){
-  final esPosicionInicial = _tablero.posicionesIniciales.contains(posicion); 
-
-  if(esPosicionInicial && _partidaIniciada){
-    return 'No puedes modificar los valores';
+ final mensajeError = _intentarColocarValidado(evento.posicion, evento.valor);
+    _actualizarEstado(mensajeError: mensajeError);
   }
 
-  if(esPosicionInicial){
-    final valoresExistentes = 
-    _tablero.valoresIniciales(excluyendo: posicion);
+  String? _intentarColocarValidado(Posicion posicion, int valor) {
+    final esPosicionInicial = _tablero.posicionesIniciales.contains(posicion);
 
-    if(!cumpleReglaTodosDiferentes(valoresExistentes, valor)){
-      return 'No puedes repetir valores iniciales';
+    if (esPosicionInicial && _partidaIniciada) {
+      return 'No puedes modificar los valores iniciales: la partida ya '
+          'comenzó';
     }
-  }
+
+    if (esPosicionInicial) {
+      final valoresExistentes =
+          _tablero.valoresIniciales(excluyendo: posicion);
+      if (!cumpleReglaTodosDiferentes(valoresExistentes, valor)) {
+        return 'Ese número ya lo usaste en otra casilla inicial';
+      }
+    }
+
+    final exito = _tablero.intentarColocarNumero(posicion, valor);
+    if (!exito) {
+      return _tablero.bloqueadoPorValoresIniciales
+          ? 'Primero debes completar los valores iniciales'
+          : 'No se puede colocar ese número ahí';
+    }
+    return null;
 }
 
 void _manejarIniciarPartida(){ 
@@ -165,6 +166,12 @@ void _manejarIniciarPartida(){
     _actualizarEstado(mensajeError: 'Completa primero los valores iniciales');
     return;
   }
+
+    if (!_tablero.valoresInicialesSonDiferentes) {
+      _actualizarEstado(
+          mensajeError: 'Los valores iniciales deben ser diferentes');
+      return;
+    }
   _partidaIniciada=true;
   _actualizarEstado();
 }
@@ -182,6 +189,8 @@ void _actualizarEstado({String? mensajeError}) {
         numerosEnMano: _numerosEnMano,
         indiceNumeroSeleccionado: _indiceNumeroSeleccionado,
         partidaIniciada: _partidaIniciada,
+        valoresInicialesValidos: !_tablero.bloqueadoPorValoresIniciales &&
+            _tablero.valoresInicialesSonDiferentes,
       );
        void dispose() {
     _estadoController.close();

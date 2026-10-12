@@ -62,6 +62,11 @@ class Tablero {
     celdas[posicion.y][posicion.x] = Celda.ocupada(valor);
   }
 
+  bool get valoresInicialesSonDiferentes {
+    final valores = valoresIniciales();
+    return valores.toSet().length == valores.length;
+  }
+
   List<int> valoresIniciales({Posicion? excluyendo}){
     final valores = <int>[];
     for (final posicion in posicionesIniciales){

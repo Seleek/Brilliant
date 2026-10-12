@@ -22,11 +22,26 @@ const BotonIniciar({super.key, required this.bloc});
           );
         }
 
-        return ElevatedButton(
-          onPressed:
-          estado.puedeIniciarPartida ? () => bloc.agregar(IniciarPartida()) : null,
-          child: const Text('Iniciar'),
-        );
+       return Column(
+        mainAxisSize: MainAxisSize.min, 
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children:[
+          ElevatedButton( 
+            onPressed: estado.puedeIniciarPartida 
+            ?() => bloc.agregar(IniciarPartida())
+            : null,
+            child: const Text('Iniciar partida'),
+          ),
+          if(!estado.puedeIniciarPartida)
+          const Padding(
+            padding: EdgeInsets.only(top: 6),
+            child: Text(
+              'Llena las casillas iluminadas con numeros diferentes',
+              style: TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+          ),
+        ],
+       );
       },
     );
   }
