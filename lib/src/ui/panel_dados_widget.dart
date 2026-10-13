@@ -6,10 +6,24 @@ class PanelDados extends StatelessWidget {
 
   final int turno;
 
-  const PanelDados({super.key, required this.dados, this.turno = 0});
+  final int? indiceSeleccionado;
+
+  final ValueChanged<int>? onDadoTocado;
+
+  const PanelDados({
+    super.key,
+    required this.dados,
+    this.turno = 0,
+    this.indiceSeleccionado,
+    this.onDadoTocado,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final pidiendoElegir = dados.isNotEmpty &&
+        onDadoTocado != null &&
+        indiceSeleccionado == null;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -39,6 +53,10 @@ class PanelDados extends StatelessWidget {
                   CasillaDado(
                     key: ValueKey('dado_$i'),
                     valor: i < dados.length ? dados[i] : null,
+                    seleccionado: i == indiceSeleccionado,
+                    onTocado: (i < dados.length && onDadoTocado != null)
+                        ? () => onDadoTocado!(i)
+                        : null,
                   ),
                 ],
               ],
@@ -51,6 +69,14 @@ class PanelDados extends StatelessWidget {
                   style: TextStyle(fontSize: 12, color: Colors.black54),
                 ),
               ),
+            if (pidiendoElegir)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text(
+                  'Elige un dado para ver dónde puedes colocarlo.',
+                  style: TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+              ),
           ],
         ),
       ),
@@ -60,26 +86,40 @@ class PanelDados extends StatelessWidget {
 
 class CasillaDado extends StatelessWidget {
   final int? valor;
+  final bool seleccionado;
+  final VoidCallback? onTocado;
 
-  const CasillaDado({super.key, this.valor});
+  const CasillaDado({
+    super.key,
+    this.valor,
+    this.seleccionado = false,
+    this.onTocado,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 56,
-      height: 56,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade400, width: 1.5),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        valor == null ? '–' : '$valor',
-        style: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: valor == null ? Colors.black26 : Colors.black87,
+    return InkWell(
+      onTap: onTocado,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        width: 56,
+        height: 56,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: seleccionado ? Colors.blue.shade100 : Colors.white,
+          border: Border.all(
+            color: seleccionado ? Colors.blue : Colors.grey.shade400,
+            width: seleccionado ? 2.5 : 1.5,
+          ),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          valor == null ? '–' : '$valor',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: valor == null ? Colors.black26 : Colors.black87,
+          ),
         ),
       ),
     );

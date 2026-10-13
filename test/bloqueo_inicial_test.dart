@@ -21,7 +21,6 @@ void main() {
       final tablero = _tableroConEstrellitas();
       tablero.colocarNumero(const Posicion(0, 0), 1);
       tablero.colocarNumero(const Posicion(3, 3), 2);
-      // Falta (6, 6).
       expect(tablero.bloqueadoPorValoresIniciales, isTrue);
     });
 
@@ -35,7 +34,7 @@ void main() {
 
     test('un tablero sin estrellitas configuradas nunca está bloqueado',
         () {
-      final tablero = Tablero.vacio({}); // posicionesIniciales por defecto
+      final tablero = Tablero.vacio({}); 
       expect(tablero.bloqueadoPorValoresIniciales, isFalse);
     });
   });
@@ -102,6 +101,33 @@ void main() {
 
       expect(tablero.celdaEn(const Posicion(1, 1)).valor, 5);
       expect(tablero.bloqueadoPorValoresIniciales, isTrue);
+    });
+  });
+
+  group('Tablero.valoresInicialesSonDiferentes', () {
+    test('sin ningún número escrito, no hay repetidos', () {
+      expect(_tableroConEstrellitas().valoresInicialesSonDiferentes, isTrue);
+    });
+
+    test('con números distintos, es true', () {
+      final tablero = _tableroConEstrellitas();
+      tablero.colocarNumero(const Posicion(0, 0), 1);
+      tablero.colocarNumero(const Posicion(3, 3), 2);
+      expect(tablero.valoresInicialesSonDiferentes, isTrue);
+    });
+
+    test('con dos estrellitas con el mismo número, es false', () {
+      final tablero = _tableroConEstrellitas();
+      tablero.colocarNumero(const Posicion(0, 0), 4);
+      tablero.colocarNumero(const Posicion(3, 3), 4);
+      expect(tablero.valoresInicialesSonDiferentes, isFalse);
+    });
+
+    test('un número repetido fuera de las estrellitas no cuenta', () {
+      final tablero = _tableroConEstrellitas();
+      tablero.colocarNumero(const Posicion(0, 0), 4);
+      tablero.colocarNumero(const Posicion(1, 1), 4); // no es estrellita
+      expect(tablero.valoresInicialesSonDiferentes, isTrue);
     });
   });
 }

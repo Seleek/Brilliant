@@ -25,7 +25,7 @@ class TableroWidget extends StatelessWidget {
         final estado = snapshot.data!;
 
         return AspectRatio(
-                   aspectRatio: 1,
+          aspectRatio: 1,
           child: GridView.builder(
             physics: const NeverScrollableScrollPhysics(),
             itemCount: Tablero.tamano * Tablero.tamano,
@@ -33,27 +33,37 @@ class TableroWidget extends StatelessWidget {
               crossAxisCount: Tablero.tamano,
             ),
             itemBuilder: (context, index) {
-                          final x = index % Tablero.tamano;
+              final x = index % Tablero.tamano;
               final y = index ~/ Tablero.tamano;
               final posicion = Posicion(x, y);
               final esSeleccionada = posicion == estado.posicionSeleccionada;
 
               final celda = estado.tablero.celdaEn(posicion);
 
-                            final indice = estado.indiceNumeroSeleccionado;
-              final numeroPreview = (esSeleccionada && indice != null)
-                  ? estado.numerosEnMano[indice]
-                  : null;
+              final esPropuesta = estado.partidaIniciada &&
+                  estado.casillasPropuestas.contains(posicion);
+
+              final int? numeroPreview;
+              if (estado.partidaIniciada) {
+                numeroPreview =
+                    esPropuesta ? estado.numeroDelDadoSeleccionado : null;
+              } else {
+                final indice = estado.indiceNumeroSeleccionado;
+                numeroPreview = (esSeleccionada && indice != null)
+                    ? estado.numerosEnMano[indice]
+                    : null;
+              }
 
               return CasillaTablero(
                 key: ValueKey('celda_${x}_$y'),
                 seleccionada: esSeleccionada,
                 esInicial: estado.tablero.posicionesIniciales.contains(posicion),
-                               iluminada:
+                iluminada:
                     estado.tablero.posicionesIniciales.contains(posicion) &&
                         !estado.partidaIniciada,
                 valor: celda.estaOcupada ? celda.valor : null,
                 numeroPreview: numeroPreview,
+                propuesta: esPropuesta,
                 colorZona: tipoPorPosicion[posicion]?.color,
                 onTap: () => bloc.agregar(SeleccionarCelda(posicion)),
               );
@@ -67,13 +77,13 @@ class TableroWidget extends StatelessWidget {
 
 class CasillaTablero extends StatelessWidget {
   final bool seleccionada;
-
-    final bool esInicial;
-
-   final bool iluminada;
+  final bool esInicial;
+  final bool iluminada;
 
   final int? valor;
   final int? numeroPreview;
+  final bool propuesta;
+
   final Color? colorZona;
   final VoidCallback? onTap;
 
@@ -84,6 +94,7 @@ class CasillaTablero extends StatelessWidget {
     this.iluminada = false,
     this.valor,
     this.numeroPreview,
+    this.propuesta = false,
     this.colorZona,
     this.onTap,
   });
@@ -127,6 +138,14 @@ class CasillaTablero extends StatelessWidget {
                   ),
                 ),
               ),
+            if (propuesta)
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: seleccionada ? Colors.white54 : Colors.white24,
+                  ),
+                ),
+              ),
             if (valor != null)
               Text(
                 '$valor',
@@ -137,7 +156,7 @@ class CasillaTablero extends StatelessWidget {
               )
             else if (mostrarPreview)
               Opacity(
-                opacity: 0.45,
+                opacity: (propuesta && seleccionada) ? 0.85 : 0.45,
                 child: Text(
                   '$numeroPreview',
                   style: const TextStyle(

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+class PanelMano extends StatelessWidget {
 
-class PanelMano extends StatelessWidget{
   final List<int> numerosEnMano;
 
   final int? indiceSeleccionado;
 
   final ValueChanged<int>? onNumeroTocado;
+
+  final bool numerosHabilitados;
 
   final VoidCallback? onColocarFicha;
 
@@ -16,19 +18,20 @@ class PanelMano extends StatelessWidget{
     required this.numerosEnMano,
     this.indiceSeleccionado,
     this.onNumeroTocado,
+    this.numerosHabilitados = true,
     this.onColocarFicha,
     this.onPasar,
   });
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child:Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children:[
+          children: [
             const Text(
               'Tu mano',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -38,67 +41,75 @@ class PanelMano extends StatelessWidget{
               spacing: 8,
               runSpacing: 8,
               children: [
-                for(var i = 0; i< numerosEnMano.length;i++)
+                for (var i = 0; i < numerosEnMano.length; i++)
                   BotonNumeroMano(
                     key: ValueKey('boton_mano_$i'),
-                    numero:numerosEnMano[i],
+                    numero: numerosEnMano[i],
+                    habilitado: numerosHabilitados,
                     seleccionado: i == indiceSeleccionado,
-                    onTocado:
-                      onNumeroTocado == null ? null : () => onNumeroTocado!(i),
+                    onTocado: (!numerosHabilitados || onNumeroTocado == null)
+                        ? null
+                        : () => onNumeroTocado!(i),
                   ),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: onColocarFicha,
-                      child: const Text('Colocar ficha'),
-                    ),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onColocarFicha,
+                    child: const Text('Colocar ficha'),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: onPasar,
-                      child: const Text('Pasar'),
-                    ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onPasar,
+                    child: const Text('Pasar'),
                   ),
+                ),
               ],
             ),
           ],
-        )
+        ),
       ),
     );
   }
 }
 
-class BotonNumeroMano extends StatelessWidget{
+class BotonNumeroMano extends StatelessWidget {
   final int numero;
   final bool seleccionado;
   final VoidCallback? onTocado;
+
+  final bool habilitado;
 
   const BotonNumeroMano({
     super.key,
     required this.numero,
     this.seleccionado = false,
     this.onTocado,
+    this.habilitado = true,
   });
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
+    final resaltado = habilitado && seleccionado;
     return InkWell(
-      onTap: onTocado,
+      onTap: habilitado ? onTocado : null,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         width: 48,
         height: 48,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: seleccionado ? Colors.blue.shade100 : Colors.white,
+          color: !habilitado
+              ? Colors.grey.shade200
+              : (resaltado ? Colors.blue.shade100 : Colors.white),
           border: Border.all(
-            color: seleccionado ? Colors.blue : Colors.grey.shade300,
-            width: seleccionado ? 2 : 1,
+            color: resaltado ? Colors.blue : Colors.grey.shade300,
+            width: resaltado ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
         ),
@@ -106,7 +117,8 @@ class BotonNumeroMano extends StatelessWidget{
           '$numero',
           style: TextStyle(
             fontSize: 18,
-            fontWeight: seleccionado ? FontWeight.bold : FontWeight.normal,
+            fontWeight: resaltado ? FontWeight.bold : FontWeight.normal,
+            color: habilitado ? Colors.black87 : Colors.black26,
           ),
         ),
       ),

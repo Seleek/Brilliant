@@ -41,7 +41,6 @@ class _PantallaTableroState extends State<PantallaTablero> {
 
     _bloc = TableroBloc(
       Tablero.vacio(const {}, posicionesIniciales: posicionesIniciales),
-
       numerosEnMano: const [1, 2, 3, 4, 5, 6],
     );
   }
@@ -66,25 +65,37 @@ class _PantallaTableroState extends State<PantallaTablero> {
                 tipoPorPosicion: _tipoPorPosicion,
               ),
             );
-
             final panel = StreamBuilder<TableroEstado>(
               stream: _bloc.estado,
               initialData: _bloc.estadoActual,
               builder: (context, snapshot) {
                 final estado = snapshot.data!;
+                final enTurnos = estado.partidaIniciada;
+
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    PanelDados(dados: estado.dados, turno: estado.turno),
+                    PanelDados(
+                      dados: estado.dados,
+                      turno: estado.turno,
+                      indiceSeleccionado: estado.indiceDadoSeleccionado,
+                      onDadoTocado: enTurnos
+                          ? (indice) => _bloc.agregar(SeleccionarDado(indice))
+                          : null,
+                    ),
                     const SizedBox(height: 16),
                     PanelMano(
                       numerosEnMano: estado.numerosEnMano,
-                      indiceSeleccionado: estado.indiceNumeroSeleccionado,
+                      numerosHabilitados: !enTurnos,
+                      indiceSeleccionado:
+                          enTurnos ? null : estado.indiceNumeroSeleccionado,
                       onNumeroTocado: (indice) =>
                           _bloc.agregar(SeleccionarNumeroDeMano(indice)),
-                      onColocarFicha: () => _bloc.agregar(ColocarFicha()),
-                      onPasar: estado.partidaIniciada
+                      onColocarFicha: (!enTurnos || estado.puedeColocarFichaDelTurno)
+                          ? () => _bloc.agregar(ColocarFicha())
+                          : null,
+                      onPasar: enTurnos
                           ? () => _bloc.agregar(PasarTurno())
                           : null,
                     ),

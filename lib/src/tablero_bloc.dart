@@ -14,13 +14,11 @@ class ColocarNumero extends TableroEvento {
   ColocarNumero(this.posicion, this.valor);
 }
 
-
 class SeleccionarCelda extends TableroEvento {
   final Posicion posicion;
 
   SeleccionarCelda(this.posicion);
 }
-
 
 class SeleccionarNumeroDeMano extends TableroEvento {
   final int indiceEnMano;
@@ -28,12 +26,17 @@ class SeleccionarNumeroDeMano extends TableroEvento {
   SeleccionarNumeroDeMano(this.indiceEnMano);
 }
 
-
 class ColocarFicha extends TableroEvento {}
 
 class IniciarPartida extends TableroEvento {}
 
 class PasarTurno extends TableroEvento {}
+
+class SeleccionarDado extends TableroEvento {
+  final int indice;
+
+  SeleccionarDado(this.indice);
+}
 
 class TableroEstado {
   final Tablero tablero;
@@ -56,6 +59,10 @@ class TableroEstado {
 
   final int turno;
 
+  final int? indiceDadoSeleccionado;
+
+  final Set<Posicion> casillasPropuestas;
+
   const TableroEstado({
     required this.tablero,
     required this.bloqueadoPorValoresIniciales,
@@ -67,10 +74,26 @@ class TableroEstado {
     this.valoresInicialesValidos = false,
     this.dados = const [],
     this.turno = 0,
+    this.indiceDadoSeleccionado,
+    this.casillasPropuestas = const {},
   });
 
   bool get puedeIniciarPartida => valoresInicialesValidos && !partidaIniciada;
+
+  int? get numeroDelDadoSeleccionado {
+    final indice = indiceDadoSeleccionado;
+    return (indice != null && indice < dados.length) ? dados[indice] : null;
+  }
+
+  bool get puedeColocarFichaDelTurno {
+    final casilla = posicionSeleccionada;
+    return partidaIniciada &&
+        indiceDadoSeleccionado != null &&
+        casilla != null &&
+        casillasPropuestas.contains(casilla);
+  }
 }
+
 class TableroBloc {
   final Tablero _tablero;
 
@@ -81,15 +104,20 @@ class TableroBloc {
   late TableroEstado _estadoActual;
 
   Posicion? _posicionSeleccionada;
-  int? _indiceNumeroSeleccionado;
-  bool _partidaIniciada = false;
 
+  int? _indiceNumeroSeleccionado;
+
+  bool _partidaIniciada = false;
 
   final Random _random;
 
   int _turno = 0;
 
   List<int> _dados = const [];
+
+  int? _indiceDadoSeleccionado;
+
+  Set<Posicion> _casillasPropuestas = {};
 
   TableroBloc(
     this._tablero, {
@@ -117,10 +145,21 @@ class TableroBloc {
       _manejarIniciarPartida();
     } else if (evento is PasarTurno) {
       _manejarPasarTurno();
+    } else if (evento is SeleccionarDado) {
+      _manejarSeleccionarDado(evento);
     }
   }
 
   void _manejarSeleccionarCelda(SeleccionarCelda evento) {
+    if (_partidaIniciada) {
+
+      if (_casillasPropuestas.contains(evento.posicion)) {
+        _posicionSeleccionada = evento.posicion;
+        _actualizarEstado();
+      }
+      return;
+    }
+
     _posicionSeleccionada = evento.posicion;
 
     _indiceNumeroSeleccionado = _indiceNumeroPorDefecto();
@@ -134,6 +173,9 @@ class TableroBloc {
   }
 
   void _manejarSeleccionarNumeroDeMano(SeleccionarNumeroDeMano evento) {
+
+    if (_partidaIniciada) return;
+
     if (evento.indiceEnMano < 0 ||
         evento.indiceEnMano >= _numerosEnMano.length) {
       return;
@@ -142,7 +184,25 @@ class TableroBloc {
     _actualizarEstado();
   }
 
+  void _manejarSeleccionarDado(SeleccionarDado evento) {
+    if (!_partidaIniciada) return;
+    if (evento.indice < 0 || evento.indice >= _dados.length) return;
+
+    if (evento.indice == _indiceDadoSeleccionado) return;
+
+    _indiceDadoSeleccionado = evento.indice;
+
+    _posicionSeleccionada = null;
+    _casillasPropuestas = _tablero.casillasVaciasAdyacentes();
+    _actualizarEstado();
+  }
+
   void _manejarColocarFicha() {
+    if (_partidaIniciada) {
+      _manejarColocarFichaDelTurno();
+      return;
+    }
+
     if (_posicionSeleccionada == null || _indiceNumeroSeleccionado == null) {
       _actualizarEstado(
         mensajeError: 'Selecciona primero una celda y un número',
@@ -153,12 +213,30 @@ class TableroBloc {
     final valor = _numerosEnMano[_indiceNumeroSeleccionado!];
     final mensajeError =
         _intentarColocarValidado(_posicionSeleccionada!, valor);
+    _actualizarEstado(mensajeError: mensajeError);
+  }
 
-    if (mensajeError == null && _partidaIniciada) {
-      _iniciarNuevoTurno();
+  void _manejarColocarFichaDelTurno() {
+    final indiceDado = _indiceDadoSeleccionado;
+    final posicion = _posicionSeleccionada;
+
+    if (indiceDado == null ||
+        posicion == null ||
+        !_casillasPropuestas.contains(posicion)) {
+      _actualizarEstado(
+        mensajeError: 'Elige un dado y una de las casillas propuestas',
+      );
+      return;
     }
 
-    _actualizarEstado(mensajeError: mensajeError);
+    final mensajeError = _intentarColocarValidado(posicion, _dados[indiceDado]);
+    if (mensajeError != null) {
+      _actualizarEstado(mensajeError: mensajeError);
+      return;
+    }
+
+    _iniciarNuevoTurno();
+    _actualizarEstado();
   }
 
   void _manejarColocarNumero(ColocarNumero evento) {
@@ -209,7 +287,7 @@ class TableroBloc {
       return;
     }
     _partidaIniciada = true;
-    _iniciarNuevoTurno(); 
+    _iniciarNuevoTurno(); // turno 1: primera tirada de dados
     _actualizarEstado();
   }
 
@@ -225,6 +303,10 @@ class TableroBloc {
   void _iniciarNuevoTurno() {
     _turno++;
     _dados = List.unmodifiable([_tirarDado(), _tirarDado()]);
+
+    _indiceDadoSeleccionado = null;
+    _casillasPropuestas = {};
+    _posicionSeleccionada = null;
   }
 
   int _tirarDado() => 1 + _random.nextInt(6);
@@ -246,6 +328,8 @@ class TableroBloc {
             _tablero.valoresInicialesSonDiferentes,
         dados: _dados,
         turno: _turno,
+        indiceDadoSeleccionado: _indiceDadoSeleccionado,
+        casillasPropuestas: Set.unmodifiable(_casillasPropuestas),
       );
 
   void dispose() {
