@@ -33,14 +33,17 @@ class _PantallaTableroState extends State<PantallaTablero> {
   void initState() {
     super.initState();
 
-    final posicionesIniciales =
-        generarPosicionesInicialesAleatorias(semilla: 42);
+    _tipoPorPosicion = construirTipoPorPosicionOficial();
+    final posicionesIniciales = generarPosicionesInicialesAleatorias(
+      semilla: 42,
+      tipoPorPosicion: _tipoPorPosicion,
+    );
 
     _bloc = TableroBloc(
       Tablero.vacio(const {}, posicionesIniciales: posicionesIniciales),
+
       numerosEnMano: const [1, 2, 3, 4, 5, 6],
     );
-    _tipoPorPosicion = construirTipoPorPosicionOficial();
   }
 
   @override
@@ -69,12 +72,23 @@ class _PantallaTableroState extends State<PantallaTablero> {
               initialData: _bloc.estadoActual,
               builder: (context, snapshot) {
                 final estado = snapshot.data!;
-                return PanelMano(
-                  numerosEnMano: estado.numerosEnMano,
-                  indiceSeleccionado: estado.indiceNumeroSeleccionado,
-                  onNumeroTocado: (indice) =>
-                      _bloc.agregar(SeleccionarNumeroDeMano(indice)),
-                  onColocarFicha: () => _bloc.agregar(ColocarFicha()),
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    PanelDados(dados: estado.dados, turno: estado.turno),
+                    const SizedBox(height: 16),
+                    PanelMano(
+                      numerosEnMano: estado.numerosEnMano,
+                      indiceSeleccionado: estado.indiceNumeroSeleccionado,
+                      onNumeroTocado: (indice) =>
+                          _bloc.agregar(SeleccionarNumeroDeMano(indice)),
+                      onColocarFicha: () => _bloc.agregar(ColocarFicha()),
+                      onPasar: estado.partidaIniciada
+                          ? () => _bloc.agregar(PasarTurno())
+                          : null,
+                    ),
+                  ],
                 );
               },
             );
@@ -115,7 +129,6 @@ class _PantallaTableroState extends State<PantallaTablero> {
                 ),
               );
             }
-
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Center(

@@ -15,3 +15,4 @@ export 'src/datos/layout_tablero_oficial.dart';
 export 'src/tipo.dart';
 export 'src/generador_posiciones_iniciales.dart';
 export 'src/ui/boton_iniciar_widget.dart';
+export 'src/ui/panel_dados_widget.dart';
