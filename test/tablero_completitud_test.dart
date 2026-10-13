@@ -1,4 +1,4 @@
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:brilliant/brilliant.dart';
  
 Map<Posicion, Bloque> _mapeoDePrueba() => {

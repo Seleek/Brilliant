@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'celda.dart';
-import 'tablero.dart';
 import 'tipo.dart';
 import 'datos/regiones.dart';
 
