@@ -28,6 +28,9 @@ class Posicion {
 
   const Posicion(this.x, this.y);
 
+  bool esAdyacenteA(Posicion otra) =>
+      (x - otra.x).abs() + (y - otra.y).abs() == 1;
+
   @override
   bool operator ==(Object other) =>
       other is Posicion && other.x == x && other.y == y;
