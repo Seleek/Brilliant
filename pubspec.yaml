@@ -1,3 +1,4 @@
+name: brilliant
 description: >
   Implementación del juego de roll & write "Brilliant" (tablero 7x7),
   siguiendo la máquina de estados: Inicial -> Turno -> Fin.
