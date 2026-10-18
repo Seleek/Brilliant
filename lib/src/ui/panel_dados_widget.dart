@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class PanelDados extends StatelessWidget {
-
   final List<int> dados;
 
   final int turno;
@@ -73,7 +72,7 @@ class PanelDados extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.only(top: 8),
                 child: Text(
-                  'Elige un dado para ver dónde puedes colocarlo.',
+                  'Elige un dado: su número va junto a un número igual al del otro dado.',
                   style: TextStyle(fontSize: 12, color: Colors.black54),
                 ),
               ),

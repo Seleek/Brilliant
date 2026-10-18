@@ -193,7 +193,9 @@ class TableroBloc {
     _indiceDadoSeleccionado = evento.indice;
 
     _posicionSeleccionada = null;
-    _casillasPropuestas = _tablero.casillasVaciasAdyacentes();
+
+    final otroDado = _dados[evento.indice == 0 ? 1 : 0];
+    _casillasPropuestas = _tablero.casillasVaciasAdyacentesAValor(otroDado);
     _actualizarEstado();
   }
 
@@ -270,7 +272,6 @@ class TableroBloc {
   }
 
   void _manejarIniciarPartida() {
-
     if (_partidaIniciada) return;
 
     if (_tablero.bloqueadoPorValoresIniciales) {
@@ -287,7 +288,7 @@ class TableroBloc {
       return;
     }
     _partidaIniciada = true;
-    _iniciarNuevoTurno(); // turno 1: primera tirada de dados
+    _iniciarNuevoTurno();
     _actualizarEstado();
   }
 

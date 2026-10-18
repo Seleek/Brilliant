@@ -30,6 +30,7 @@ class Tablero {
             'El tablero debe tener $tamano filas (eje y)'),
         assert(celdas.every((fila) => fila.length == tamano),
             'Cada fila del tablero debe tener $tamano columnas (eje x)');
+
   factory Tablero.vacio(
     Map<Posicion, Bloque> bloquePorPosicion, {
     Map<Bloque, Tipo> tipoPorBloque = const {},
@@ -47,28 +48,40 @@ class Tablero {
   }
 
   Celda celdaEn(Posicion posicion) => celdas[posicion.y][posicion.x];
+
   bool get bloqueadoPorValoresIniciales => posicionesIniciales
       .any((posicion) => celdaEn(posicion).estaVacia);
+
   bool puedeColocarEn(Posicion posicion) {
     if (!bloqueadoPorValoresIniciales) return true;
     return posicionesIniciales.contains(posicion);
   }
+
   bool intentarColocarNumero(Posicion posicion, int valor) {
     if (!puedeColocarEn(posicion)) return false;
     colocarNumero(posicion, valor);
     return true;
   }
-  void colocarNumero(Posicion posicion, int valor) {
+
+    void colocarNumero(Posicion posicion, int valor) {
     celdas[posicion.y][posicion.x] = Celda.ocupada(valor);
   }
 
-  Set<Posicion> casillasVaciasAdyacentes() {
+  Set<Posicion> casillasVaciasAdyacentes() =>
+      _casillasVaciasJuntoA((celda) => celda.estaOcupada);
+
+  Set<Posicion> casillasVaciasAdyacentesAValor(int valor) =>
+      _casillasVaciasJuntoA(
+        (celda) => celda.estaOcupada && celda.valor == valor,
+      );
+
+  Set<Posicion> _casillasVaciasJuntoA(bool Function(Celda) criterio) {
     final resultado = <Posicion>{};
     for (var y = 0; y < tamano; y++) {
       for (var x = 0; x < tamano; x++) {
         final posicion = Posicion(x, y);
         if (celdaEn(posicion).estaOcupada) continue;
-        if (_vecinosDe(posicion).any((vecina) => celdaEn(vecina).estaOcupada)) {
+        if (_vecinosDe(posicion).any((vecina) => criterio(celdaEn(vecina)))) {
           resultado.add(posicion);
         }
       }
@@ -76,7 +89,7 @@ class Tablero {
     return resultado;
   }
 
-   Iterable<Posicion> _vecinosDe(Posicion posicion) sync* {
+  Iterable<Posicion> _vecinosDe(Posicion posicion) sync* {
     const desplazamientos = [(1, 0), (-1, 0), (0, 1), (0, -1)];
     for (final (dx, dy) in desplazamientos) {
       final x = posicion.x + dx;
@@ -86,10 +99,12 @@ class Tablero {
       }
     }
   }
+
   bool get valoresInicialesSonDiferentes {
     final valores = valoresIniciales();
     return valores.toSet().length == valores.length;
   }
+
   List<int> valoresIniciales({Posicion? excluyendo}) {
     final valores = <int>[];
     for (final posicion in posicionesIniciales) {
@@ -99,6 +114,7 @@ class Tablero {
     }
     return valores;
   }
+
   List<int> valoresDeBloque(Bloque bloque) {
     final valores = <int>[];
     bloquePorPosicion.forEach((posicion, bloqueDeLaCelda) {

@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'package:test/test.dart';
 import 'package:brilliant/brilliant.dart';
 
 Map<Posicion, Bloque> _mapeoDePrueba() => {
@@ -32,7 +32,6 @@ void main() {
         'número', () {
       final tablero = Tablero.vacio(_mapeoDePrueba());
       tablero.colocarNumero(const Posicion(0, 0), 5);
-      // (0, 1) se queda vacía a propósito.
 
       expect(tablero.valoresDeBloque(Bloque.bloque1), equals([5]));
     });
@@ -40,7 +39,7 @@ void main() {
     test('no mezcla valores de celdas de otros bloques', () {
       final tablero = Tablero.vacio(_mapeoDePrueba());
       tablero.colocarNumero(const Posicion(0, 0), 5);
-      tablero.colocarNumero(const Posicion(3, 3), 6); // pertenece a bloque2
+      tablero.colocarNumero(const Posicion(3, 3), 6); 
 
       expect(tablero.valoresDeBloque(Bloque.bloque1), equals([5]));
       expect(tablero.valoresDeBloque(Bloque.bloque2), equals([6]));
@@ -137,11 +136,83 @@ void main() {
       tablero.colocarNumero(const Posicion(2, 3), 1);
       tablero.colocarNumero(const Posicion(4, 3), 2);
 
-      // Cada una tiene 4 vecinas y comparten (3, 3), que está entre las
-      // dos: 4 + 4 - 1 = 7 casillas distintas.
       final propuestas = tablero.casillasVaciasAdyacentes();
       expect(propuestas, hasLength(7));
       expect(propuestas, contains(const Posicion(3, 3)));
+    });
+  });
+
+  group('Tablero.casillasVaciasAdyacentesAValor', () {
+    test('sin ningún número igual en el tablero, no hay casillas', () {
+      final tablero = Tablero.vacio(const {});
+      tablero.colocarNumero(const Posicion(3, 3), 2);
+
+      expect(tablero.casillasVaciasAdyacentesAValor(6), isEmpty);
+    });
+
+    test('propone las 4 vecinas vacías del número buscado', () {
+      final tablero = Tablero.vacio(const {});
+      tablero.colocarNumero(const Posicion(3, 3), 6);
+
+      expect(tablero.casillasVaciasAdyacentesAValor(6), {
+        const Posicion(3, 2),
+        const Posicion(3, 4),
+        const Posicion(2, 3),
+        const Posicion(4, 3),
+      });
+    });
+
+    test('ignora las vecinas de números distintos al buscado', () {
+      final tablero = Tablero.vacio(const {});
+      tablero.colocarNumero(const Posicion(1, 1), 6);
+      tablero.colocarNumero(const Posicion(5, 5), 2);
+
+      final propuestas = tablero.casillasVaciasAdyacentesAValor(6);
+      expect(propuestas, contains(const Posicion(1, 2)));
+      expect(propuestas, isNot(contains(const Posicion(5, 4))));
+    });
+
+    test('une las vecinas de todos los números iguales al buscado', () {
+      final tablero = Tablero.vacio(const {});
+      tablero.colocarNumero(const Posicion(0, 0), 1);
+      tablero.colocarNumero(const Posicion(6, 6), 1);
+
+      expect(tablero.casillasVaciasAdyacentesAValor(1), {
+        const Posicion(1, 0),
+        const Posicion(0, 1),
+        const Posicion(5, 6),
+        const Posicion(6, 5),
+      });
+    });
+
+    test('no incluye casillas ocupadas, aunque sean vecinas del buscado',
+        () {
+      final tablero = Tablero.vacio(const {});
+      tablero.colocarNumero(const Posicion(3, 3), 6);
+      tablero.colocarNumero(const Posicion(4, 3), 2); // vecina ocupada
+
+      final propuestas = tablero.casillasVaciasAdyacentesAValor(6);
+      expect(propuestas, isNot(contains(const Posicion(4, 3))));
+      expect(propuestas, hasLength(3));
+    });
+
+    test('las diagonales no cuentan', () {
+      final tablero = Tablero.vacio(const {});
+      tablero.colocarNumero(const Posicion(3, 3), 6);
+
+      final propuestas = tablero.casillasVaciasAdyacentesAValor(6);
+      expect(propuestas, isNot(contains(const Posicion(2, 2))));
+      expect(propuestas, isNot(contains(const Posicion(4, 4))));
+    });
+
+    test('respeta el borde del tablero', () {
+      final tablero = Tablero.vacio(const {});
+      tablero.colocarNumero(const Posicion(0, 0), 4);
+
+      expect(tablero.casillasVaciasAdyacentesAValor(4), {
+        const Posicion(1, 0),
+        const Posicion(0, 1),
+      });
     });
   });
 }
