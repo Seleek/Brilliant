@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'brilliant.dart';
@@ -7,19 +9,25 @@ void main() {
 }
 
 class BrilliantApp extends StatelessWidget {
-  const BrilliantApp({super.key});
+
+  final Random? random;
+
+  const BrilliantApp({super.key, this.random});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Brilliant',
-      home: const PantallaTablero(),
+      home: PantallaTablero(random: random),
     );
   }
 }
 
 class PantallaTablero extends StatefulWidget {
-  const PantallaTablero({super.key});
+
+  final Random? random;
+
+  const PantallaTablero({super.key, this.random});
 
   @override
   State<PantallaTablero> createState() => _PantallaTableroState();
@@ -41,7 +49,9 @@ class _PantallaTableroState extends State<PantallaTablero> {
 
     _bloc = TableroBloc(
       Tablero.vacio(const {}, posicionesIniciales: posicionesIniciales),
+
       numerosEnMano: const [1, 2, 3, 4, 5, 6],
+      random: widget.random,
     );
   }
 
@@ -65,11 +75,13 @@ class _PantallaTableroState extends State<PantallaTablero> {
                 tipoPorPosicion: _tipoPorPosicion,
               ),
             );
+
             final panel = StreamBuilder<TableroEstado>(
               stream: _bloc.estado,
               initialData: _bloc.estadoActual,
               builder: (context, snapshot) {
                 final estado = snapshot.data!;
+
                 final enTurnos = estado.partidaIniciada;
 
                 return Column(
@@ -95,6 +107,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
                       onColocarFicha: (!enTurnos || estado.puedeColocarFichaDelTurno)
                           ? () => _bloc.agregar(ColocarFicha())
                           : null,
+
                       onPasar: enTurnos
                           ? () => _bloc.agregar(PasarTurno())
                           : null,
@@ -140,6 +153,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
                 ),
               );
             }
+
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Center(
