@@ -87,4 +87,17 @@ void main() {
     };
     expect(colores, hasLength(5));
   });
+
+  test('los tipos aceptan puntuaciones específicas por nivel', () {
+    const puntuaciones = {1: 10, 2: 8, 3: 6};
+
+    expect(TipoRojo(puntuaciones: puntuaciones).puntuaciones, puntuaciones);
+    expect(
+      TipoAmarillo(puntuaciones: puntuaciones).puntuaciones,
+      puntuaciones,
+    );
+    expect(TipoAzul(puntuaciones: puntuaciones).puntuaciones, puntuaciones);
+    expect(TipoVerde(puntuaciones: puntuaciones).puntuaciones, puntuaciones);
+    expect(TipoMorado(puntuaciones: puntuaciones).puntuaciones, puntuaciones);
+  });
 }

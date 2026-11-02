@@ -3,13 +3,14 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import 'brilliant.dart';
+import 'src/datos/niveles.dart';
+import 'src/ui/pantalla_seleccion_nivel.dart';
 
 void main() {
   runApp(const BrilliantApp());
 }
 
 class BrilliantApp extends StatelessWidget {
-
   final Random? random;
 
   const BrilliantApp({super.key, this.random});
@@ -18,16 +19,39 @@ class BrilliantApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Brilliant',
-      home: PantallaTablero(random: random),
+      home: PantallaInicio(random: random),
+    );
+  }
+}
+
+class PantallaInicio extends StatelessWidget {
+
+  final Random? random;
+
+  const PantallaInicio({super.key, this.random});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Brilliant')),
+      body: PantallaSeleccionNivel(
+        niveles: construirNiveles(),
+        onNivelElegido: (nivel) => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => PantallaTablero(nivel: nivel, random: random),
+          ),
+        ),
+      ),
     );
   }
 }
 
 class PantallaTablero extends StatefulWidget {
+  final Nivel nivel;
 
   final Random? random;
 
-  const PantallaTablero({super.key, this.random});
+  const PantallaTablero({super.key, required this.nivel, this.random});
 
   @override
   State<PantallaTablero> createState() => _PantallaTableroState();
@@ -35,20 +59,16 @@ class PantallaTablero extends StatefulWidget {
 
 class _PantallaTableroState extends State<PantallaTablero> {
   late final TableroBloc _bloc;
-  late final Map<Posicion, Tipo> _tipoPorPosicion;
 
   @override
   void initState() {
     super.initState();
 
-    _tipoPorPosicion = construirTipoPorPosicionOficial();
-    final posicionesIniciales = generarPosicionesInicialesAleatorias(
-      semilla: 42,
-      tipoPorPosicion: _tipoPorPosicion,
-    );
-
     _bloc = TableroBloc(
-      Tablero.vacio(const {}, posicionesIniciales: posicionesIniciales),
+      Tablero.vacio(
+        const {},
+        posicionesIniciales: widget.nivel.posicionesIniciales,
+      ),
 
       numerosEnMano: const [1, 2, 3, 4, 5, 6],
       random: widget.random,
@@ -64,7 +84,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Brilliant — tablero')),
+      appBar: AppBar(title: Text('Brilliant — ${widget.nivel.nombre}')),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -72,7 +92,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
               width: 420,
               child: TableroWidget(
                 bloc: _bloc,
-                tipoPorPosicion: _tipoPorPosicion,
+                tipoPorPosicion: widget.nivel.tipoPorPosicion,
               ),
             );
 
@@ -104,10 +124,10 @@ class _PantallaTableroState extends State<PantallaTablero> {
                           enTurnos ? null : estado.indiceNumeroSeleccionado,
                       onNumeroTocado: (indice) =>
                           _bloc.agregar(SeleccionarNumeroDeMano(indice)),
-                      onColocarFicha: (!enTurnos || estado.puedeColocarFichaDelTurno)
-                          ? () => _bloc.agregar(ColocarFicha())
-                          : null,
-
+                      onColocarFicha:
+                          (!enTurnos || estado.puedeColocarFichaDelTurno)
+                              ? () => _bloc.agregar(ColocarFicha())
+                              : null,
                       onPasar: enTurnos
                           ? () => _bloc.agregar(PasarTurno())
                           : null,
