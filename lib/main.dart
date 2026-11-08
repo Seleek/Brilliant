@@ -26,7 +26,9 @@ class _BrilliantAppState extends State<BrilliantApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Brilliant',
+      // Decidimos qué pantalla mostrar basándonos en si el usuario ya se autenticó
       home: _authService.isAuthenticated
           ? PantallaInicio(
               random: widget.random,
@@ -42,7 +44,6 @@ class _BrilliantAppState extends State<BrilliantApp> {
 }
 
 class PantallaInicio extends StatelessWidget {
-
   final Random? random;
   final AuthService authService;
   final VoidCallback onLogout;
@@ -51,73 +52,35 @@ class PantallaInicio extends StatelessWidget {
     super.key,
     this.random,
     required this.authService,
-    required this.onLogout,});
-
-  Future<void> _confirmarBorrarCuenta(BuildContext context) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Eliminar cuenta'),
-        content: const Text('¿Estás seguro de que deseas eliminar tu cuenta de forma permanente?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmar == true) {
-      try {
-        await authService.borrarCuenta();
-        onLogout();
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${e.toString()}')),
-          );
-        }
-      }
-    }
-  }
-
+    required this.onLogout,
+  });
 
   @override
-Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Brilliant - ${authService.currentUser}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
-            tooltip: 'Borrar Cuenta',
-            onPressed: () => _confirmarBorrarCuenta(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Cerrar Sesión',
-            onPressed: () {
-              authService.cerrarSesion();
-              onLogout();
-            },
-          ),
-        ],
-      ),
-      body: PantallaSeleccionNivel(
-        niveles: construirNiveles(),
-        onNivelElegido: (nivel) => Navigator.of(context).push(
+  Widget build(BuildContext context) {
+    return PantallaSeleccionNivel(
+      authService: authService,
+      onLogout: onLogout,
+      onNivelElegido: (numeroNivel) {
+        // Obtenemos todos los niveles de la lógica del juego
+        final listaDeNiveles = construirNiveles();
+        
+        // Asociamos el botón presionado (1 al 4) con el índice de la lista (0 al 3)
+        final index = (numeroNivel - 1).clamp(0, listaDeNiveles.length - 1);
+        final nivelElegido = listaDeNiveles[index];
+
+        // Ejecutamos la navegación para abrir el tablero de juego
+        Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (_) => PantallaTablero(nivel: nivel, random: random),
+            builder: (_) => PantallaTablero(
+              nivel: nivelElegido, 
+              random: random,
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
-
 class PantallaTablero extends StatefulWidget {
   final Nivel nivel;
 
