@@ -5,21 +5,38 @@ import 'package:flutter/material.dart';
 import 'brilliant.dart';
 import 'src/datos/niveles.dart';
 import 'src/ui/pantalla_seleccion_nivel.dart';
+import 'src/servicios/auth_service.dart';
+import 'src/ui/pantalla_auth.dart';
 
 void main() {
   runApp(const BrilliantApp());
 }
 
-class BrilliantApp extends StatelessWidget {
+class BrilliantApp extends StatefulWidget {
   final Random? random;
-
   const BrilliantApp({super.key, this.random});
+
+  @override
+  State<BrilliantApp> createState() => _BrilliantAppState();
+}
+
+class _BrilliantAppState extends State<BrilliantApp> {
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Brilliant',
-      home: PantallaInicio(random: random),
+      home: _authService.isAuthenticated
+          ? PantallaInicio(
+              random: widget.random,
+              authService: _authService,
+              onLogout: () => setState(() {}),
+            )
+          : PantallaAuth(
+              authService: _authService,
+              onLoginExitoso: () => setState(() {}),
+            ),
     );
   }
 }
@@ -27,13 +44,68 @@ class BrilliantApp extends StatelessWidget {
 class PantallaInicio extends StatelessWidget {
 
   final Random? random;
+  final AuthService authService;
+  final VoidCallback onLogout;
 
-  const PantallaInicio({super.key, this.random});
+  const PantallaInicio({
+    super.key,
+    this.random,
+    required this.authService,
+    required this.onLogout,});
+
+  Future<void> _confirmarBorrarCuenta(BuildContext context) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar cuenta'),
+        content: const Text('¿Estás seguro de que deseas eliminar tu cuenta de forma permanente?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true) {
+      try {
+        await authService.borrarCuenta();
+        onLogout();
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${e.toString()}')),
+          );
+        }
+      }
+    }
+  }
+
 
   @override
-  Widget build(BuildContext context) {
+Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Brilliant')),
+      appBar: AppBar(
+        title: Text('Brilliant - ${authService.currentUser}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
+            tooltip: 'Borrar Cuenta',
+            onPressed: () => _confirmarBorrarCuenta(context),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Cerrar Sesión',
+            onPressed: () {
+              authService.cerrarSesion();
+              onLogout();
+            },
+          ),
+        ],
+      ),
       body: PantallaSeleccionNivel(
         niveles: construirNiveles(),
         onNivelElegido: (nivel) => Navigator.of(context).push(
