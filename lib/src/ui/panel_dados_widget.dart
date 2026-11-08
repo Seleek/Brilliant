@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 
 class PanelDados extends StatelessWidget {
   final List<int> dados;
-
   final int turno;
-
+  final int puntaje; 
   final int? indiceSeleccionado;
-
   final ValueChanged<int>? onDadoTocado;
 
   const PanelDados({
     super.key,
     required this.dados,
     this.turno = 0,
+    this.puntaje = 0, // <--- Valor por defecto
     this.indiceSeleccionado,
     this.onDadoTocado,
   });
@@ -30,12 +29,35 @@ class PanelDados extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Dados',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                Row(
+                  children: [
+                    const Text(
+                      'Dados',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(width: 12),
+                    // Marcador de puntaje destacado sobre/al lado de los dados
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade200),
+                      ),
+                      child: Text(
+                        'Puntos: $puntaje',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade900,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 if (turno > 0)
                   Text(

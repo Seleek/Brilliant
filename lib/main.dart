@@ -146,6 +146,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
                     PanelDados(
                       dados: estado.dados,
                       turno: estado.turno,
+                      puntaje: estado.puntajeTotal,
                       indiceSeleccionado: estado.indiceDadoSeleccionado,
                       onDadoTocado: enTurnos
                           ? (indice) => _bloc.agregar(SeleccionarDado(indice))

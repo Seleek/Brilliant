@@ -39,6 +39,7 @@ class SeleccionarDado extends TableroEvento {
 }
 
 class TableroEstado {
+
   final Tablero tablero;
 
   final bool bloqueadoPorValoresIniciales;
@@ -46,6 +47,8 @@ class TableroEstado {
   final String? mensajeError;
 
   final Posicion? posicionSeleccionada;
+  
+  final int puntajeTotal;
 
   final List<int> numerosEnMano;
 
@@ -68,6 +71,7 @@ class TableroEstado {
     required this.bloqueadoPorValoresIniciales,
     this.mensajeError,
     this.posicionSeleccionada,
+    required this.puntajeTotal,
     this.numerosEnMano = const [],
     this.indiceNumeroSeleccionado,
     this.partidaIniciada = false,
@@ -248,27 +252,38 @@ class TableroBloc {
 
   String? _intentarColocarValidado(Posicion posicion, int valor) {
     final esPosicionInicial = _tablero.posicionesIniciales.contains(posicion);
+  
+  // 1. Validar si es posición inicial y la partida ya arrancó
+  if (esPosicionInicial && _partidaIniciada) {
+    return 'No puedes modificar los valores iniciales: la partida ya comenzó.';
+  }
 
-    if (esPosicionInicial && _partidaIniciada) {
-      return 'No puedes modificar los valores iniciales: la partida ya '
-          'comenzó';
+  if (esPosicionInicial) {
+    final valoresExistentes = _tablero.valoresIniciales(excluyendo: posicion);
+    if (!cumpleReglaTodosDiferentes(valoresExistentes, valor)) {
+      return 'Ese número ya lo usaste en otra casilla inicial';
     }
+  }
 
-    if (esPosicionInicial) {
-      final valoresExistentes =
-          _tablero.valoresIniciales(excluyendo: posicion);
-      if (!cumpleReglaTodosDiferentes(valoresExistentes, valor)) {
-        return 'Ese número ya lo usaste en otra casilla inicial';
+  final bloque = _tablero.bloquePorPosicion[posicion];
+  if (bloque != null) {
+    final tipo = _tablero.tipoDe(bloque);
+    if (tipo != null) {
+      final valoresActuales = _tablero.valoresDeBloque(bloque);
+      if (!tipo.esPosibleAgregar(valoresActuales, valor)) {
+        return 'El número $valor no cumple con la regla de esta zona (${tipo.descripcion})';
       }
     }
+  }
 
-    final exito = _tablero.intentarColocarNumero(posicion, valor);
-    if (!exito) {
-      return _tablero.bloqueadoPorValoresIniciales
-          ? 'Primero debes completar los valores iniciales'
-          : 'No se puede colocar ese número ahí';
-    }
-    return null;
+  final exito = _tablero.intentarColocarNumero(posicion, valor);
+  if (!exito) {
+    return _tablero.bloqueadoPorValoresIniciales
+        ? 'Primero debes completar los valores iniciales'
+        : 'No se puede colocar ese número ahí';
+  }
+
+  return null; 
   }
 
   void _manejarIniciarPartida() {
@@ -331,6 +346,7 @@ class TableroBloc {
         turno: _turno,
         indiceDadoSeleccionado: _indiceDadoSeleccionado,
         casillasPropuestas: Set.unmodifiable(_casillasPropuestas),
+        puntajeTotal: 0,
       );
 
   void dispose() {

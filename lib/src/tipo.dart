@@ -15,6 +15,10 @@ abstract class Tipo{
   Map<int, int> get puntuaciones;
 }
 
+bool validarMovimiento(Tipo tipoZona, List<int> numerosEnZona, int numeroAColocar) {
+  return tipoZona.esPosibleAgregar(numerosEnZona, numeroAColocar);
+}
+
 class TipoRojo extends Tipo {
   final Map<int, int> _puntuaciones;
 
