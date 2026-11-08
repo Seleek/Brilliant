@@ -4,6 +4,8 @@ import 'dart:math';
 import 'celda.dart';
 import 'reglas/regla_todos_diferentes.dart';
 import 'tablero.dart';
+import 'tipo.dart';
+import 'datos/regiones.dart';
 
 abstract class TableroEvento {}
 
@@ -39,7 +41,6 @@ class SeleccionarDado extends TableroEvento {
 }
 
 class TableroEstado {
-
   final Tablero tablero;
 
   final bool bloqueadoPorValoresIniciales;
@@ -47,7 +48,7 @@ class TableroEstado {
   final String? mensajeError;
 
   final Posicion? posicionSeleccionada;
-  
+
   final int puntajeTotal;
 
   final List<int> numerosEnMano;
@@ -123,12 +124,26 @@ class TableroBloc {
 
   Set<Posicion> _casillasPropuestas = {};
 
+  late final List<Set<Posicion>> _zonas;
+
+  late final Map<Posicion, Set<Posicion>> _zonaPorPosicion;
+
+  final Map<Set<Posicion>, int> _puestoPorZona = {};
+
   TableroBloc(
     this._tablero, {
     List<int> numerosEnMano = const [],
     Random? random,
   })  : _numerosEnMano = numerosEnMano,
         _random = random ?? Random() {
+    _zonas = agruparEnRegiones(
+      _tablero.tipoPorPosicion,
+      coloresUnificados: _tablero.coloresUnificados,
+    );
+    _zonaPorPosicion = {
+      for (final zona in _zonas)
+        for (final posicion in zona) posicion: zona,
+    };
     _estadoActual = _construirEstado();
   }
 
@@ -156,7 +171,6 @@ class TableroBloc {
 
   void _manejarSeleccionarCelda(SeleccionarCelda evento) {
     if (_partidaIniciada) {
-
       if (_casillasPropuestas.contains(evento.posicion)) {
         _posicionSeleccionada = evento.posicion;
         _actualizarEstado();
@@ -177,7 +191,6 @@ class TableroBloc {
   }
 
   void _manejarSeleccionarNumeroDeMano(SeleccionarNumeroDeMano evento) {
-
     if (_partidaIniciada) return;
 
     if (evento.indiceEnMano < 0 ||
@@ -246,44 +259,62 @@ class TableroBloc {
   }
 
   void _manejarColocarNumero(ColocarNumero evento) {
-    final mensajeError = _intentarColocarValidado(evento.posicion, evento.valor);
+    final mensajeError =
+        _intentarColocarValidado(evento.posicion, evento.valor);
     _actualizarEstado(mensajeError: mensajeError);
   }
 
   String? _intentarColocarValidado(Posicion posicion, int valor) {
     final esPosicionInicial = _tablero.posicionesIniciales.contains(posicion);
-  
-  // 1. Validar si es posición inicial y la partida ya arrancó
-  if (esPosicionInicial && _partidaIniciada) {
-    return 'No puedes modificar los valores iniciales: la partida ya comenzó.';
-  }
 
-  if (esPosicionInicial) {
-    final valoresExistentes = _tablero.valoresIniciales(excluyendo: posicion);
-    if (!cumpleReglaTodosDiferentes(valoresExistentes, valor)) {
-      return 'Ese número ya lo usaste en otra casilla inicial';
+    // 1. Validar si es posición inicial y la partida ya arrancó
+    if (esPosicionInicial && _partidaIniciada) {
+      return 'No puedes modificar los valores iniciales: la partida ya comenzó.';
     }
-  }
 
-  final bloque = _tablero.bloquePorPosicion[posicion];
-  if (bloque != null) {
-    final tipo = _tablero.tipoDe(bloque);
-    if (tipo != null) {
-      final valoresActuales = _tablero.valoresDeBloque(bloque);
-      if (!tipo.esPosibleAgregar(valoresActuales, valor)) {
-        return 'El número $valor no cumple con la regla de esta zona (${tipo.descripcion})';
+    if (esPosicionInicial) {
+      final valoresExistentes = _tablero.valoresIniciales(excluyendo: posicion);
+      if (!cumpleReglaTodosDiferentes(valoresExistentes, valor)) {
+        return 'Ese número ya lo usaste en otra casilla inicial';
       }
     }
-  }
 
-  final exito = _tablero.intentarColocarNumero(posicion, valor);
-  if (!exito) {
-    return _tablero.bloqueadoPorValoresIniciales
-        ? 'Primero debes completar los valores iniciales'
-        : 'No se puede colocar ese número ahí';
-  }
+    final tipoPorPosicion = _tablero.tipoPorPosicion[posicion];
+    if (tipoPorPosicion != null &&
+        (tipoPorPosicion is TipoVerde ||
+            tipoPorPosicion is TipoAzul ||
+            tipoPorPosicion is TipoGris)) {
+      final zona = _zonaPorPosicion[posicion]!;
+      final valoresActuales = [
+        for (final posicionDeZona in zona)
+          if (_tablero.celdaEn(posicionDeZona).estaOcupada)
+            _tablero.celdaEn(posicionDeZona).valor!,
+      ];
+      if (!tipoPorPosicion.esPosibleAgregar(valoresActuales, valor)) {
+        return 'El número $valor no cumple con la regla de esta zona (${tipoPorPosicion.descripcion})';
+      }
+    } else {
+      final bloque = _tablero.bloquePorPosicion[posicion];
+      if (bloque != null) {
+        final tipo = _tablero.tipoDe(bloque);
+        if (tipo != null) {
+          final valoresActuales = _tablero.valoresDeBloque(bloque);
+          if (!tipo.esPosibleAgregar(valoresActuales, valor)) {
+            return 'El número $valor no cumple con la regla de esta zona (${tipo.descripcion})';
+          }
+        }
+      }
+    }
 
-  return null; 
+    final exito = _tablero.intentarColocarNumero(posicion, valor);
+    if (!exito) {
+      return _tablero.bloqueadoPorValoresIniciales
+          ? 'Primero debes completar los valores iniciales'
+          : 'No se puede colocar ese número ahí';
+    }
+
+    _registrarZonaCompletada(posicion);
+    return null;
   }
 
   void _manejarIniciarPartida() {
@@ -346,8 +377,53 @@ class TableroBloc {
         turno: _turno,
         indiceDadoSeleccionado: _indiceDadoSeleccionado,
         casillasPropuestas: Set.unmodifiable(_casillasPropuestas),
-        puntajeTotal: 0,
+        puntajeTotal: _puntajeTotal,
       );
+
+  int get _puntajeTotal {
+    var total = 0;
+    for (final zona in _zonas) {
+      final tipo = _tablero.tipoPorPosicion[zona.first];
+      if (tipo == null || !_zonaCompletaYValida(zona, tipo)) continue;
+
+      if (tipo is TipoVerde) {
+        total += tipo.puntuaciones[1] ?? 0;
+      } else if (tipo is TipoAzul || tipo is TipoGris) {
+        final puesto = _puestoPorZona[zona];
+        if (puesto != null) {
+          total += tipo.puntuaciones[puesto] ?? 0;
+        }
+      }
+    }
+    return total;
+  }
+
+  void _registrarZonaCompletada(Posicion posicion) {
+    final zona = _zonaPorPosicion[posicion];
+    if (zona == null || _puestoPorZona.containsKey(zona)) return;
+
+    final tipo = _tablero.tipoPorPosicion[posicion];
+    if (tipo == null || (tipo is! TipoAzul && tipo is! TipoGris)) return;
+    if (!_zonaCompletaYValida(zona, tipo)) return;
+
+    final zonasDelMismoColor = _puestoPorZona.keys.where(
+      (zonaPuntuada) =>
+          _tablero.tipoPorPosicion[zonaPuntuada.first]?.color == tipo.color,
+    );
+    _puestoPorZona[zona] = zonasDelMismoColor.length + 1;
+  }
+
+  bool _zonaCompletaYValida(Set<Posicion> zona, Tipo tipo) {
+    if (!zona.every((posicion) => _tablero.celdaEn(posicion).estaOcupada)) {
+      return false;
+    }
+
+    if (tipo is TipoAzul || tipo is TipoGris) {
+      final valores = zona.map((posicion) => _tablero.celdaEn(posicion).valor);
+      return valores.toSet().length == 1;
+    }
+    return true;
+  }
 
   void dispose() {
     _estadoController.close();

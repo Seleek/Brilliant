@@ -1,8 +1,13 @@
+import 'package:flutter/material.dart';
+
 import '../celda.dart';
 import '../tablero.dart';
 import '../tipo.dart';
 
-List<Set<Posicion>> agruparEnRegiones(Map<Posicion, Tipo> tipoPorPosicion) {
+List<Set<Posicion>> agruparEnRegiones(
+  Map<Posicion, Tipo> tipoPorPosicion, {
+  Set<Color> coloresUnificados = const {},
+}) {
   final regiones = <Set<Posicion>>[];
   final visitadas = <Posicion>{};
 
@@ -14,6 +19,16 @@ List<Set<Posicion>> agruparEnRegiones(Map<Posicion, Tipo> tipoPorPosicion) {
       }
 
       final color = tipoPorPosicion[inicio]!.color;
+      if (coloresUnificados.contains(color)) {
+        final region = tipoPorPosicion.entries
+            .where((entrada) => entrada.value.color == color)
+            .map((entrada) => entrada.key)
+            .toSet();
+        visitadas.addAll(region);
+        regiones.add(region);
+        continue;
+      }
+
       final region = <Posicion>{};
       final pendientes = <Posicion>[inicio];
       visitadas.add(inicio);

@@ -63,7 +63,7 @@ class PantallaInicio extends StatelessWidget {
       onNivelElegido: (numeroNivel) {
         // Obtenemos todos los niveles de la lógica del juego
         final listaDeNiveles = construirNiveles();
-        
+
         // Asociamos el botón presionado (1 al 4) con el índice de la lista (0 al 3)
         final index = (numeroNivel - 1).clamp(0, listaDeNiveles.length - 1);
         final nivelElegido = listaDeNiveles[index];
@@ -72,7 +72,7 @@ class PantallaInicio extends StatelessWidget {
         Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => PantallaTablero(
-              nivel: nivelElegido, 
+              nivel: nivelElegido,
               random: random,
             ),
           ),
@@ -81,6 +81,7 @@ class PantallaInicio extends StatelessWidget {
     );
   }
 }
+
 class PantallaTablero extends StatefulWidget {
   final Nivel nivel;
 
@@ -102,9 +103,10 @@ class _PantallaTableroState extends State<PantallaTablero> {
     _bloc = TableroBloc(
       Tablero.vacio(
         const {},
+        tipoPorPosicion: widget.nivel.tipoPorPosicion,
+        coloresUnificados: widget.nivel.coloresUnificados,
         posicionesIniciales: widget.nivel.posicionesIniciales,
       ),
-
       numerosEnMano: const [1, 2, 3, 4, 5, 6],
       random: widget.random,
     );
@@ -164,9 +166,8 @@ class _PantallaTableroState extends State<PantallaTablero> {
                           (!enTurnos || estado.puedeColocarFichaDelTurno)
                               ? () => _bloc.agregar(ColocarFicha())
                               : null,
-                      onPasar: enTurnos
-                          ? () => _bloc.agregar(PasarTurno())
-                          : null,
+                      onPasar:
+                          enTurnos ? () => _bloc.agregar(PasarTurno()) : null,
                     ),
                   ],
                 );

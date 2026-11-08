@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import '../celda.dart';
 import '../tablero.dart';
 import '../tipo.dart';
@@ -9,11 +11,14 @@ class Nivel {
 
   final Map<Posicion, Tipo> tipoPorPosicion;
 
+  final Set<Color> coloresUnificados;
+
   final Set<Posicion> posicionesIniciales;
 
   Nivel({
     required this.numero,
     required this.tipoPorPosicion,
+    required this.coloresUnificados,
     required this.posicionesIniciales,
   }) : nombre = 'Nivel $numero';
 }
@@ -46,12 +51,12 @@ List<Nivel> construirNiveles() => [
     ];
 
 const List<String> _filasNivel1 = [
-  'YVAMMMY', 
-  'VVAAMMV', 
+  'YVAMMMY',
+  'VVAAMMV',
   'VRRAMVV',
   'VRMYVVV',
   'VRMMRRA',
-  'RRMRRAA', 
+  'RRMRRAA',
   'YMMRRAY',
 ];
 const List<Posicion> _estrellasNivel1 = [
@@ -72,11 +77,11 @@ const Map<String, Map<int, int>> _puntosNivel1 = {
 
 const List<String> _filasNivel2 = [
   'MMMGVVV',
-  'MYAAAYV', 
-  'MRRAARV', 
-  'RRRYRRR', 
-  'VRAARRM', 
-  'VYAAAYM', 
+  'MYAAAYV',
+  'MRRAARV',
+  'RRRYRRR',
+  'VRAARRM',
+  'VYAAAYM',
   'VVVGMMM',
 ];
 const List<Posicion> _estrellasNivel2 = [
@@ -93,7 +98,7 @@ const Map<String, Map<int, int>> _puntosNivel2 = {
   'R': {1: 6, 2: 4, 3: 2},
   'A': {1: 7, 2: 5, 3: 3},
   'V': {1: 4, 2: 3, 3: 2},
-  'G': {1: 3, 2: 2, 3: 1},
+  'G': {1: 3, 2: 3, 3: 1},
 };
 
 const List<String> _filasNivel3 = [
@@ -101,8 +106,8 @@ const List<String> _filasNivel3 = [
   'GYMMMYG',
   'RRRMRRR',
   'RRRGRRR',
-  'VAAAAAV', 
-  'VVVVVVV', 
+  'VAAAAAV',
+  'VVVVVVV',
   'MMMGMMM',
 ];
 const List<Posicion> _estrellasNivel3 = [
@@ -125,11 +130,11 @@ const Map<String, Map<int, int>> _puntosNivel3 = {
 const List<String> _filasNivel4 = [
   'NNNNNNN',
   'YRAVARY',
-  'RRMMMRR', 
+  'RRMMMRR',
   'YVAMAVY',
-  'RRMMMRR', 
-  'YRAVARY', 
-  'nnnnnnn', 
+  'RRMMMRR',
+  'YRAVARY',
+  'nnnnnnn',
 ];
 const List<Posicion> _estrellasNivel4 = [
   Posicion(4, 0),
@@ -148,7 +153,6 @@ const Map<String, Map<int, int>> _puntosNivel4 = {
   // Las dos zonas naranjas (4-6 y 1-3) valen lo mismo.
   'N': {1: 6, 2: 4, 3: 3},
 };
-
 
 Nivel _construirNivel({
   required int numero,
@@ -171,9 +175,17 @@ Nivel _construirNivel({
     }
   }
 
+  final coloresUnificados = <Color>{};
+  if (tipoPorPosicion.values.any((tipo) => tipo is TipoGris)) {
+    coloresUnificados.add(TipoGris().color);
+  }
+  if (numero == 3 || numero == 4) {
+    coloresUnificados.add(TipoAzul().color);
+  }
   return Nivel(
     numero: numero,
     tipoPorPosicion: tipoPorPosicion,
+    coloresUnificados: coloresUnificados,
     posicionesIniciales: estrellas.toSet(),
   );
 }

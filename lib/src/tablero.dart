@@ -19,12 +19,18 @@ class Tablero {
 
   final Map<Bloque, Tipo> tipoPorBloque;
 
+  final Map<Posicion, Tipo> tipoPorPosicion;
+
+  final Set<Color> coloresUnificados;
+
   final Set<Posicion> posicionesIniciales;
 
   Tablero({
     required this.celdas,
     required this.bloquePorPosicion,
     this.tipoPorBloque = const {},
+    this.tipoPorPosicion = const {},
+    this.coloresUnificados = const {},
     this.posicionesIniciales = const {},
   })  : assert(celdas.length == tamano,
             'El tablero debe tener $tamano filas (eje y)'),
@@ -34,6 +40,8 @@ class Tablero {
   factory Tablero.vacio(
     Map<Posicion, Bloque> bloquePorPosicion, {
     Map<Bloque, Tipo> tipoPorBloque = const {},
+    Map<Posicion, Tipo> tipoPorPosicion = const {},
+    Set<Color> coloresUnificados = const {},
     Set<Posicion> posicionesIniciales = const {},
   }) {
     return Tablero(
@@ -43,14 +51,16 @@ class Tablero {
       ),
       bloquePorPosicion: bloquePorPosicion,
       tipoPorBloque: tipoPorBloque,
+      tipoPorPosicion: tipoPorPosicion,
+      coloresUnificados: coloresUnificados,
       posicionesIniciales: posicionesIniciales,
     );
   }
 
   Celda celdaEn(Posicion posicion) => celdas[posicion.y][posicion.x];
 
-  bool get bloqueadoPorValoresIniciales => posicionesIniciales
-      .any((posicion) => celdaEn(posicion).estaVacia);
+  bool get bloqueadoPorValoresIniciales =>
+      posicionesIniciales.any((posicion) => celdaEn(posicion).estaVacia);
 
   bool puedeColocarEn(Posicion posicion) {
     if (!bloqueadoPorValoresIniciales) return true;
@@ -63,7 +73,7 @@ class Tablero {
     return true;
   }
 
-    void colocarNumero(Posicion posicion, int valor) {
+  void colocarNumero(Posicion posicion, int valor) {
     celdas[posicion.y][posicion.x] = Celda.ocupada(valor);
   }
 
