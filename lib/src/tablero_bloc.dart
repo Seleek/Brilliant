@@ -286,7 +286,8 @@ class TableroBloc {
             tipoPorPosicion is TipoAzul ||
             tipoPorPosicion is TipoGris ||
             tipoPorPosicion is TipoRojo ||
-            tipoPorPosicion is TipoAmarillo)) {
+            tipoPorPosicion is TipoAmarillo ||
+            tipoPorPosicion is TipoMorado)) {
       final zona = _zonaPorPosicion[posicion]!;
       final valoresActuales = [
         for (final posicionDeZona in zona)
@@ -394,7 +395,8 @@ class TableroBloc {
       } else if (tipo is TipoAzul ||
           tipo is TipoGris ||
           tipo is TipoRojo ||
-          tipo is TipoAmarillo) {
+          tipo is TipoAmarillo ||
+          tipo is TipoMorado) {
         final puesto = _puestoPorZona[zona];
         if (puesto != null) {
           total += tipo.puntuaciones[puesto] ?? 0;
@@ -413,7 +415,8 @@ class TableroBloc {
         (tipo is! TipoAzul &&
             tipo is! TipoGris &&
             tipo is! TipoRojo &&
-            tipo is! TipoAmarillo)) {
+            tipo is! TipoAmarillo &&
+            tipo is! TipoMorado)) {
       return;
     }
     if (!_zonaCompletaYValida(zona, tipo)) return;
@@ -433,10 +436,14 @@ class TableroBloc {
     if (tipo is TipoAzul ||
         tipo is TipoGris ||
         tipo is TipoRojo ||
-        tipo is TipoAmarillo) {
+        tipo is TipoAmarillo ||
+        tipo is TipoMorado) {
       final valores = zona.map((posicion) => _tablero.celdaEn(posicion).valor);
       if (tipo is TipoAzul || tipo is TipoGris) {
         return valores.toSet().length == 1;
+      }
+      if (tipo is TipoMorado) {
+        return valores.toSet().length == 2;
       }
       return valores.toSet().length == zona.length;
     }
