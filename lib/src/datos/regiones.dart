@@ -8,6 +8,7 @@ List<Set<Posicion>> agruparEnRegiones(
   Map<Posicion, Tipo> tipoPorPosicion, {
   Set<Color> coloresUnificados = const {},
   Map<Color, int> divisionesPorColumna = const {},
+  Map<Color, int> divisionesPorFila = const {},
 }) {
   final regiones = <Set<Posicion>>[];
   final visitadas = <Posicion>{};
@@ -38,6 +39,25 @@ List<Set<Posicion>> agruparEnRegiones(
                 (entrada) =>
                     entrada.value.color == color &&
                     (entrada.key.x <= division) == lado,
+              )
+              .map((entrada) => entrada.key)
+              .toSet();
+          if (region.isNotEmpty) {
+            visitadas.addAll(region);
+            regiones.add(region);
+          }
+        }
+        continue;
+      }
+
+      final divisionFila = divisionesPorFila[color];
+      if (divisionFila != null) {
+        for (final lado in [true, false]) {
+          final region = tipoPorPosicion.entries
+              .where(
+                (entrada) =>
+                    entrada.value.color == color &&
+                    (entrada.key.y <= divisionFila) == lado,
               )
               .map((entrada) => entrada.key)
               .toSet();

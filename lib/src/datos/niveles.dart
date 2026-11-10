@@ -15,6 +15,8 @@ class Nivel {
 
   final Map<Color, int> divisionesPorColumna;
 
+  final Map<Color, int> divisionesPorFila;
+
   final Set<Posicion> posicionesIniciales;
 
   Nivel({
@@ -22,6 +24,7 @@ class Nivel {
     required this.tipoPorPosicion,
     required this.coloresUnificados,
     required this.divisionesPorColumna,
+    required this.divisionesPorFila,
     required this.posicionesIniciales,
   }) : nombre = 'Nivel $numero';
 }
@@ -187,11 +190,15 @@ Nivel _construirNivel({
     coloresUnificados.add(TipoAzul().color);
   }
   final divisionesPorColumna = {TipoRojo().color: 3};
+  final divisionesPorFila = numero == 4
+      ? {TipoNaranja(minimo: 4, maximo: 6).color: 3}
+      : <Color, int>{};
   return Nivel(
     numero: numero,
     tipoPorPosicion: tipoPorPosicion,
     coloresUnificados: coloresUnificados,
     divisionesPorColumna: divisionesPorColumna,
+    divisionesPorFila: divisionesPorFila,
     posicionesIniciales: estrellas.toSet(),
   );
 }
