@@ -5,18 +5,20 @@ class PantallaSeleccionNivel extends StatelessWidget {
   final AuthService authService;
   final Function(int) onNivelElegido;
   final VoidCallback onLogout;
+  final VoidCallback? onMultijugador;
 
   const PantallaSeleccionNivel({
     super.key,
     required this.authService,
     required this.onNivelElegido,
     required this.onLogout,
+    this.onMultijugador,
   });
 
   // Colores de la paleta
   final Color _colorPrimario = const Color(0xFF4F46E5); // Azul Índigo
-  final Color _colorFondo = const Color(0xFFF8FAFC);    // Blanco Hueso
-  final Color _colorTexto = const Color(0xFF1E293B);    // Gris Oscuro
+  final Color _colorFondo = const Color(0xFFF8FAFC); // Blanco Hueso
+  final Color _colorTexto = const Color(0xFF1E293B); // Gris Oscuro
 
   // Menú de opciones (Cerrar sesión / Borrar cuenta)
   void _mostrarOpciones(BuildContext context) {
@@ -44,7 +46,8 @@ class PantallaSeleccionNivel extends StatelessWidget {
                 const SizedBox(height: 16),
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.blueGrey),
-                  title: Text('Cerrar Sesión', style: TextStyle(color: _colorTexto)),
+                  title: Text('Cerrar Sesión',
+                      style: TextStyle(color: _colorTexto)),
                   onTap: () async {
                     Navigator.pop(ctx); // Cerrar bottom sheet
                     await authService.cerrarSesion();
@@ -56,7 +59,8 @@ class PantallaSeleccionNivel extends StatelessWidget {
                   leading: const Icon(Icons.delete_forever, color: Colors.red),
                   title: const Text(
                     'Eliminar Cuenta',
-                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.red, fontWeight: FontWeight.bold),
                   ),
                   onTap: () {
                     Navigator.pop(ctx); // Cerrar bottom sheet
@@ -137,7 +141,8 @@ class PantallaSeleccionNivel extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.green[50],
                           borderRadius: BorderRadius.circular(12),
@@ -185,15 +190,26 @@ class PantallaSeleccionNivel extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
+              if (onMultijugador != null) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: onMultijugador,
+                    icon: const Icon(Icons.groups_rounded),
+                    label: const Text('Jugar con amigos'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Cuadrícula de niveles (Grid 2x2)
               Expanded(
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,          // 2 columnas
+                    crossAxisCount: 2, // 2 columnas
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 0.85,     // Tarjetas ligeramente altas
+                    childAspectRatio: 0.85, // Tarjetas ligeramente altas
                   ),
                   itemCount: niveles.length,
                   itemBuilder: (context, index) {
@@ -204,7 +220,9 @@ class PantallaSeleccionNivel extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: _colorPrimario.withOpacity(0.3), width: 1.5),
+                          border: Border.all(
+                              color: _colorPrimario.withOpacity(0.3),
+                              width: 1.5),
                           boxShadow: [
                             BoxShadow(
                               color: _colorPrimario.withOpacity(0.04),

@@ -59,6 +59,8 @@ class TableroEstado {
 
   final bool valoresInicialesValidos;
 
+  final bool jugadaEnviada;
+
   final List<int> dados;
 
   final int turno;
@@ -77,6 +79,7 @@ class TableroEstado {
     this.indiceNumeroSeleccionado,
     this.partidaIniciada = false,
     this.valoresInicialesValidos = false,
+    this.jugadaEnviada = false,
     this.dados = const [],
     this.turno = 0,
     this.indiceDadoSeleccionado,
@@ -94,6 +97,7 @@ class TableroEstado {
     final casilla = posicionSeleccionada;
     return partidaIniciada &&
         indiceDadoSeleccionado != null &&
+        !jugadaEnviada &&
         casilla != null &&
         casillasPropuestas.contains(casilla);
   }
@@ -115,6 +119,7 @@ class TableroBloc {
   bool _partidaIniciada = false;
 
   final Random _random;
+  final bool _dadosCompartidos;
 
   int _turno = 0;
 
@@ -129,13 +134,17 @@ class TableroBloc {
   late final Map<Posicion, Set<Posicion>> _zonaPorPosicion;
 
   final Map<Set<Posicion>, int> _puestoPorZona = {};
+  bool _jugadaEnviada = false;
+  int? _puntajeRemoto;
 
   TableroBloc(
     this._tablero, {
     List<int> numerosEnMano = const [],
     Random? random,
+    bool dadosCompartidos = false,
   })  : _numerosEnMano = numerosEnMano,
-        _random = random ?? Random() {
+        _random = random ?? Random(),
+        _dadosCompartidos = dadosCompartidos {
     _zonas = agruparEnRegiones(
       _tablero.tipoPorPosicion,
       coloresUnificados: _tablero.coloresUnificados,
@@ -172,6 +181,7 @@ class TableroBloc {
   }
 
   void _manejarSeleccionarCelda(SeleccionarCelda evento) {
+    if (_jugadaEnviada) return;
     if (_partidaIniciada) {
       if (_casillasPropuestas.contains(evento.posicion)) {
         _posicionSeleccionada = evento.posicion;
@@ -204,7 +214,7 @@ class TableroBloc {
   }
 
   void _manejarSeleccionarDado(SeleccionarDado evento) {
-    if (!_partidaIniciada) return;
+    if (!_partidaIniciada || _jugadaEnviada) return;
     if (evento.indice < 0 || evento.indice >= _dados.length) return;
 
     if (evento.indice == _indiceDadoSeleccionado) return;
@@ -256,7 +266,14 @@ class TableroBloc {
       return;
     }
 
-    _iniciarNuevoTurno();
+    if (_dadosCompartidos) {
+      _jugadaEnviada = true;
+      _indiceDadoSeleccionado = null;
+      _casillasPropuestas = {};
+      _posicionSeleccionada = null;
+    } else {
+      _iniciarNuevoTurno();
+    }
     _actualizarEstado();
   }
 
@@ -349,7 +366,60 @@ class TableroBloc {
       _actualizarEstado(mensajeError: 'Primero debes iniciar la partida');
       return;
     }
-    _iniciarNuevoTurno();
+    if (_dadosCompartidos) {
+      if (_jugadaEnviada) return;
+      _jugadaEnviada = true;
+      _indiceDadoSeleccionado = null;
+      _casillasPropuestas = {};
+      _posicionSeleccionada = null;
+    } else {
+      _iniciarNuevoTurno();
+    }
+    _actualizarEstado();
+  }
+
+  List<int?> get valoresCeldas => [
+        for (final fila in _tablero.celdas)
+          for (final celda in fila) celda.valor,
+      ];
+
+  void aplicarInstantaneaRemota(
+    List<dynamic> cells, {
+    required bool partidaIniciada,
+    required List<int> dados,
+    required int ronda,
+    required bool jugadaEnviada,
+    required int puntaje,
+  }) {
+    if (cells.length != Tablero.tamano * Tablero.tamano ||
+        cells.any((value) =>
+            value != null && (value is! int || value < 1 || value > 6))) {
+      throw const FormatException('El tablero remoto tiene datos inválidos');
+    }
+    if (partidaIniciada &&
+        (dados.length != 2 || dados.any((dado) => dado < 1 || dado > 6))) {
+      throw const FormatException('Los dados remotos tienen datos inválidos');
+    }
+    for (var index = 0; index < cells.length; index++) {
+      final x = index % Tablero.tamano;
+      final y = index ~/ Tablero.tamano;
+      final valor = cells[index] as int?;
+      _tablero.celdas[y][x] =
+          valor == null ? const Celda.vacia() : Celda.ocupada(valor);
+    }
+    _partidaIniciada = partidaIniciada;
+    _dados = List.unmodifiable(dados);
+    _turno = ronda;
+    _jugadaEnviada = jugadaEnviada;
+    _puntajeRemoto = puntaje;
+    _indiceDadoSeleccionado = null;
+    _casillasPropuestas = {};
+    _posicionSeleccionada = null;
+    _actualizarEstado();
+  }
+
+  void actualizarPuntajeRemoto(int puntaje) {
+    _puntajeRemoto = puntaje;
     _actualizarEstado();
   }
 
@@ -379,11 +449,12 @@ class TableroBloc {
         partidaIniciada: _partidaIniciada,
         valoresInicialesValidos: !_tablero.bloqueadoPorValoresIniciales &&
             _tablero.valoresInicialesSonDiferentes,
+        jugadaEnviada: _jugadaEnviada,
         dados: _dados,
         turno: _turno,
         indiceDadoSeleccionado: _indiceDadoSeleccionado,
         casillasPropuestas: Set.unmodifiable(_casillasPropuestas),
-        puntajeTotal: _puntajeTotal,
+        puntajeTotal: _puntajeRemoto ?? _puntajeTotal,
       );
 
   int get _puntajeTotal {

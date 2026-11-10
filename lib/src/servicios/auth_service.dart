@@ -2,13 +2,25 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  static const String baseUrl = 'http://localhost:8080/api/auth';
-  
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:8080/api',
+  );
+  static const String baseUrl = '$apiBaseUrl/auth';
+
   String? _jwtToken;
   String? _currentUser;
 
   String? get currentUser => _currentUser;
   bool get isAuthenticated => _jwtToken != null;
+  Map<String, String> get authenticatedHeaders {
+    final token = _jwtToken;
+    if (token == null) throw Exception('No autenticado');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
 
   Future<void> registrar(String username, String password) async {
     final response = await http.post(
