@@ -7,6 +7,7 @@ import '../tipo.dart';
 List<Set<Posicion>> agruparEnRegiones(
   Map<Posicion, Tipo> tipoPorPosicion, {
   Set<Color> coloresUnificados = const {},
+  Map<Color, int> divisionesPorColumna = const {},
 }) {
   final regiones = <Set<Posicion>>[];
   final visitadas = <Posicion>{};
@@ -26,6 +27,25 @@ List<Set<Posicion>> agruparEnRegiones(
             .toSet();
         visitadas.addAll(region);
         regiones.add(region);
+        continue;
+      }
+
+      final division = divisionesPorColumna[color];
+      if (division != null) {
+        for (final lado in [true, false]) {
+          final region = tipoPorPosicion.entries
+              .where(
+                (entrada) =>
+                    entrada.value.color == color &&
+                    (entrada.key.x <= division) == lado,
+              )
+              .map((entrada) => entrada.key)
+              .toSet();
+          if (region.isNotEmpty) {
+            visitadas.addAll(region);
+            regiones.add(region);
+          }
+        }
         continue;
       }
 

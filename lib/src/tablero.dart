@@ -23,6 +23,8 @@ class Tablero {
 
   final Set<Color> coloresUnificados;
 
+  final Map<Color, int> divisionesPorColumna;
+
   final Set<Posicion> posicionesIniciales;
 
   Tablero({
@@ -31,6 +33,7 @@ class Tablero {
     this.tipoPorBloque = const {},
     this.tipoPorPosicion = const {},
     this.coloresUnificados = const {},
+    this.divisionesPorColumna = const {},
     this.posicionesIniciales = const {},
   })  : assert(celdas.length == tamano,
             'El tablero debe tener $tamano filas (eje y)'),
@@ -42,6 +45,7 @@ class Tablero {
     Map<Bloque, Tipo> tipoPorBloque = const {},
     Map<Posicion, Tipo> tipoPorPosicion = const {},
     Set<Color> coloresUnificados = const {},
+    Map<Color, int> divisionesPorColumna = const {},
     Set<Posicion> posicionesIniciales = const {},
   }) {
     return Tablero(
@@ -53,6 +57,7 @@ class Tablero {
       tipoPorBloque: tipoPorBloque,
       tipoPorPosicion: tipoPorPosicion,
       coloresUnificados: coloresUnificados,
+      divisionesPorColumna: divisionesPorColumna,
       posicionesIniciales: posicionesIniciales,
     );
   }

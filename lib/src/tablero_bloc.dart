@@ -139,6 +139,7 @@ class TableroBloc {
     _zonas = agruparEnRegiones(
       _tablero.tipoPorPosicion,
       coloresUnificados: _tablero.coloresUnificados,
+      divisionesPorColumna: _tablero.divisionesPorColumna,
     );
     _zonaPorPosicion = {
       for (final zona in _zonas)
@@ -283,7 +284,9 @@ class TableroBloc {
     if (tipoPorPosicion != null &&
         (tipoPorPosicion is TipoVerde ||
             tipoPorPosicion is TipoAzul ||
-            tipoPorPosicion is TipoGris)) {
+            tipoPorPosicion is TipoGris ||
+            tipoPorPosicion is TipoRojo ||
+            tipoPorPosicion is TipoAmarillo)) {
       final zona = _zonaPorPosicion[posicion]!;
       final valoresActuales = [
         for (final posicionDeZona in zona)
@@ -388,7 +391,10 @@ class TableroBloc {
 
       if (tipo is TipoVerde) {
         total += tipo.puntuaciones[1] ?? 0;
-      } else if (tipo is TipoAzul || tipo is TipoGris) {
+      } else if (tipo is TipoAzul ||
+          tipo is TipoGris ||
+          tipo is TipoRojo ||
+          tipo is TipoAmarillo) {
         final puesto = _puestoPorZona[zona];
         if (puesto != null) {
           total += tipo.puntuaciones[puesto] ?? 0;
@@ -403,7 +409,13 @@ class TableroBloc {
     if (zona == null || _puestoPorZona.containsKey(zona)) return;
 
     final tipo = _tablero.tipoPorPosicion[posicion];
-    if (tipo == null || (tipo is! TipoAzul && tipo is! TipoGris)) return;
+    if (tipo == null ||
+        (tipo is! TipoAzul &&
+            tipo is! TipoGris &&
+            tipo is! TipoRojo &&
+            tipo is! TipoAmarillo)) {
+      return;
+    }
     if (!_zonaCompletaYValida(zona, tipo)) return;
 
     final zonasDelMismoColor = _puestoPorZona.keys.where(
@@ -418,9 +430,15 @@ class TableroBloc {
       return false;
     }
 
-    if (tipo is TipoAzul || tipo is TipoGris) {
+    if (tipo is TipoAzul ||
+        tipo is TipoGris ||
+        tipo is TipoRojo ||
+        tipo is TipoAmarillo) {
       final valores = zona.map((posicion) => _tablero.celdaEn(posicion).valor);
-      return valores.toSet().length == 1;
+      if (tipo is TipoAzul || tipo is TipoGris) {
+        return valores.toSet().length == 1;
+      }
+      return valores.toSet().length == zona.length;
     }
     return true;
   }

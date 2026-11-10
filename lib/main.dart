@@ -105,6 +105,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
         const {},
         tipoPorPosicion: widget.nivel.tipoPorPosicion,
         coloresUnificados: widget.nivel.coloresUnificados,
+        divisionesPorColumna: widget.nivel.divisionesPorColumna,
         posicionesIniciales: widget.nivel.posicionesIniciales,
       ),
       numerosEnMano: const [1, 2, 3, 4, 5, 6],
