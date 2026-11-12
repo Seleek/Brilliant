@@ -10,10 +10,13 @@ class TableroWidget extends StatelessWidget {
 
   final Map<Posicion, Tipo> tipoPorPosicion;
 
+  final bool interactivo;
+
   const TableroWidget({
     super.key,
     required this.bloc,
     this.tipoPorPosicion = const {},
+    this.interactivo = true,
   });
 
   @override
@@ -29,7 +32,7 @@ class TableroWidget extends StatelessWidget {
           child: GridView.builder(
             physics: const NeverScrollableScrollPhysics(),
             itemCount: Tablero.tamano * Tablero.tamano,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: Tablero.tamano,
             ),
             itemBuilder: (context, index) {
@@ -57,7 +60,8 @@ class TableroWidget extends StatelessWidget {
               return CasillaTablero(
                 key: ValueKey('celda_${x}_$y'),
                 seleccionada: esSeleccionada,
-                esInicial: estado.tablero.posicionesIniciales.contains(posicion),
+                esInicial:
+                    estado.tablero.posicionesIniciales.contains(posicion),
                 iluminada:
                     estado.tablero.posicionesIniciales.contains(posicion) &&
                         !estado.partidaIniciada,
@@ -65,7 +69,9 @@ class TableroWidget extends StatelessWidget {
                 numeroPreview: numeroPreview,
                 propuesta: esPropuesta,
                 colorZona: tipoPorPosicion[posicion]?.color,
-                onTap: () => bloc.agregar(SeleccionarCelda(posicion)),
+                onTap: interactivo
+                    ? () => bloc.agregar(SeleccionarCelda(posicion))
+                    : null,
               );
             },
           ),

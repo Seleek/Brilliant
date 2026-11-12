@@ -132,8 +132,11 @@ class PantallaTablero extends StatefulWidget {
 class _PantallaTableroState extends State<PantallaTablero> {
   late final TableroBloc _bloc;
   Timer? _timerSala;
+  Timer? _timerCuentaPausa;
   bool _enviandoJugada = false;
+  bool _votandoContinuar = false;
   bool _forzarSincronizacion = false;
+  DateTime _relojPausa = DateTime.now();
   String? _errorSala;
   RoomSnapshot? _salaActual;
 
@@ -167,6 +170,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
   void dispose() {
     _bloc.dispose();
     _timerSala?.cancel();
+    _timerCuentaPausa?.cancel();
     super.dispose();
   }
 
@@ -177,11 +181,18 @@ class _PantallaTableroState extends State<PantallaTablero> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final juegoBloqueado = widget.roomService != null &&
+                !widget.preparandoSala &&
+                (_salaActual?.paused != false ||
+                    _salaActual?.phase != 'partida' ||
+                    _salaActual?.player(widget.usuario ?? '')?.eliminated ==
+                        true);
             final tablero = SizedBox(
               width: 420,
               child: TableroWidget(
                 bloc: _bloc,
                 tipoPorPosicion: widget.nivel.tipoPorPosicion,
+                interactivo: !juegoBloqueado,
               ),
             );
 
@@ -213,13 +224,16 @@ class _PantallaTableroState extends State<PantallaTablero> {
                             Chip(
                               visualDensity: VisualDensity.compact,
                               avatar: Icon(
-                                jugador.submitted
-                                    ? Icons.check_circle
-                                    : Icons.person_outline,
+                                !jugador.connected || jugador.eliminated
+                                    ? Icons.wifi_off
+                                    : jugador.submitted
+                                        ? Icons.check_circle
+                                        : Icons.person_outline,
                                 size: 16,
                               ),
                               label: Text(
-                                '${jugador.username}: ${jugador.score}',
+                                '${jugador.username}: ${jugador.score}'
+                                '${jugador.eliminated || !jugador.connected ? ' · Desconectado' : ''}',
                               ),
                             ),
                         ],
@@ -231,7 +245,8 @@ class _PantallaTableroState extends State<PantallaTablero> {
                       turno: estado.turno,
                       puntaje: estado.puntajeTotal,
                       indiceSeleccionado: estado.indiceDadoSeleccionado,
-                      onDadoTocado: enTurnos &&
+                      onDadoTocado: !juegoBloqueado &&
+                              enTurnos &&
                               !estado.jugadaEnviada &&
                               !_enviandoJugada
                           ? (indice) => _bloc.agregar(SeleccionarDado(indice))
@@ -243,23 +258,27 @@ class _PantallaTableroState extends State<PantallaTablero> {
                       numerosHabilitados: !enTurnos,
                       indiceSeleccionado:
                           enTurnos ? null : estado.indiceNumeroSeleccionado,
-                      onNumeroTocado: (indice) =>
-                          _bloc.agregar(SeleccionarNumeroDeMano(indice)),
-                      onColocarFicha:
-                          (!enTurnos || estado.puedeColocarFichaDelTurno) &&
-                                  !_enviandoJugada
-                              ? widget.roomService != null &&
-                                      !widget.preparandoSala &&
-                                      enTurnos
-                                  ? () => _enviarJugada(pasada: false)
-                                  : () => _bloc.agregar(ColocarFicha())
-                              : null,
-                      onPasar:
-                          enTurnos && !estado.jugadaEnviada && !_enviandoJugada
-                              ? widget.roomService != null
-                                  ? () => _enviarJugada(pasada: true)
-                                  : () => _bloc.agregar(PasarTurno())
-                              : null,
+                      onNumeroTocado: juegoBloqueado
+                          ? null
+                          : (indice) =>
+                              _bloc.agregar(SeleccionarNumeroDeMano(indice)),
+                      onColocarFicha: !juegoBloqueado &&
+                              (!enTurnos || estado.puedeColocarFichaDelTurno) &&
+                              !_enviandoJugada
+                          ? widget.roomService != null &&
+                                  !widget.preparandoSala &&
+                                  enTurnos
+                              ? () => _enviarJugada(pasada: false)
+                              : () => _bloc.agregar(ColocarFicha())
+                          : null,
+                      onPasar: !juegoBloqueado &&
+                              enTurnos &&
+                              !estado.jugadaEnviada &&
+                              !_enviandoJugada
+                          ? widget.roomService != null
+                              ? () => _enviarJugada(pasada: true)
+                              : () => _bloc.agregar(PasarTurno())
+                          : null,
                     ),
                   ],
                 );
@@ -273,30 +292,42 @@ class _PantallaTableroState extends State<PantallaTablero> {
             if (esAncho) {
               return Padding(
                 padding: const EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Column(
                   children: [
-                    tablero,
-                    const SizedBox(width: 24),
+                    if (_mostrarEstadoSala) ...[
+                      _panelEstadoSala(),
+                      const SizedBox(height: 12),
+                    ],
                     Expanded(
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 320),
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                ReglasNivelWidget(nivel: widget.nivel),
-                                const SizedBox(height: 16),
-                                panel,
-                                const SizedBox(height: 16),
-                                boton,
-                              ],
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          tablero,
+                          const SizedBox(width: 24),
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: ConstrainedBox(
+                                constraints:
+                                    const BoxConstraints(maxWidth: 320),
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      ReglasNivelWidget(nivel: widget.nivel),
+                                      const SizedBox(height: 16),
+                                      panel,
+                                      const SizedBox(height: 16),
+                                      boton,
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ],
@@ -309,6 +340,10 @@ class _PantallaTableroState extends State<PantallaTablero> {
               child: Center(
                 child: Column(
                   children: [
+                    if (_mostrarEstadoSala) ...[
+                      SizedBox(width: 420, child: _panelEstadoSala()),
+                      const SizedBox(height: 16),
+                    ],
                     tablero,
                     const SizedBox(height: 16),
                     SizedBox(
@@ -327,6 +362,133 @@ class _PantallaTableroState extends State<PantallaTablero> {
         ),
       ),
     );
+  }
+
+  bool get _mostrarEstadoSala =>
+      widget.roomService != null &&
+      (_salaActual?.paused == true ||
+          _salaActual?.phase == 'finalizada' ||
+          _salaActual?.player(widget.usuario ?? '')?.eliminated == true);
+
+  Widget _panelEstadoSala() {
+    final sala = _salaActual!;
+    final theme = Theme.of(context);
+    final jugador = sala.player(widget.usuario ?? '');
+    final Color color;
+    final String mensaje;
+
+    if (sala.phase == 'finalizada') {
+      color = Colors.green.shade100;
+      mensaje = sala.winner == null
+          ? 'La partida terminó.'
+          : sala.winner == widget.usuario
+              ? '¡Ganaste! La partida terminó.'
+              : 'La partida terminó. Ganó ${sala.winner}.';
+    } else if (jugador?.eliminated == true) {
+      color = Colors.red.shade100;
+      mensaje = 'Quedaste desconectado y no puedes volver a esta partida.';
+    } else {
+      color = Colors.amber.shade100;
+      final limite = sala.pauseDeadline;
+      final restante =
+          limite == null ? Duration.zero : limite.difference(_relojPausa);
+      final segundos = restante.inSeconds.clamp(0, 5 * 60);
+      final minutosTexto = (segundos ~/ 60).toString().padLeft(2, '0');
+      final segundosTexto = (segundos % 60).toString().padLeft(2, '0');
+      mensaje = '${sala.disconnectedUsername} se desconectó. '
+          'La partida está pausada. Tiempo de espera: '
+          '$minutosTexto:$segundosTexto.';
+    }
+
+    final votantes = sala.players
+        .where(
+          (player) =>
+              player.connected &&
+              !player.eliminated &&
+              player.username != sala.disconnectedUsername,
+        )
+        .toList();
+    final puedeVotar = sala.paused &&
+        jugador != null &&
+        jugador.connected &&
+        !jugador.eliminated &&
+        jugador.username != sala.disconnectedUsername;
+
+    return Card(
+      color: color,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(mensaje, style: const TextStyle(fontWeight: FontWeight.w600)),
+            if (sala.paused) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final votante in votantes)
+                    Chip(
+                      visualDensity: VisualDensity.compact,
+                      avatar: Icon(
+                        votante.votedToContinue
+                            ? Icons.pan_tool
+                            : Icons.person_outline,
+                        size: 16,
+                        color: votante.votedToContinue
+                            ? theme.colorScheme.primary
+                            : null,
+                      ),
+                      label: Text(votante.username),
+                    ),
+                ],
+              ),
+              if (puedeVotar) ...[
+                const SizedBox(height: 8),
+                FilledButton.icon(
+                  onPressed: _votandoContinuar || jugador.votedToContinue
+                      ? null
+                      : _votarContinuarSinJugador,
+                  icon: const Icon(Icons.pan_tool),
+                  label: Text(
+                    jugador.votedToContinue
+                        ? 'Voto registrado'
+                        : 'Continuar sin el jugador',
+                  ),
+                ),
+              ],
+            ],
+            if (_errorSala != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _errorSala!,
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _votarContinuarSinJugador() async {
+    final sala = _salaActual;
+    if (sala == null || _votandoContinuar) return;
+    setState(() {
+      _votandoContinuar = true;
+      _errorSala = null;
+    });
+    try {
+      _aplicarSala(
+        await widget.roomService!.votarContinuarSinJugador(sala.code),
+      );
+      if (mounted) setState(() {});
+    } catch (error) {
+      if (mounted) setState(() => _errorSala = error.toString());
+    } finally {
+      if (mounted) setState(() => _votandoContinuar = false);
+    }
   }
 
   Widget _controlesInferiores() {
@@ -380,9 +542,13 @@ class _PantallaTableroState extends State<PantallaTablero> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              estado.jugadaEnviada
-                  ? 'Jugada enviada. Esperando a los demás…'
-                  : 'Ronda ${estado.turno}: elige un dado y juega.',
+              _salaActual?.paused == true
+                  ? 'Partida pausada.'
+                  : _salaActual?.phase == 'finalizada'
+                      ? 'Partida finalizada.'
+                      : estado.jugadaEnviada
+                          ? 'Jugada enviada. Esperando a los demás…'
+                          : 'Ronda ${estado.turno}: elige un dado y juega.',
               textAlign: TextAlign.center,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
@@ -429,6 +595,11 @@ class _PantallaTableroState extends State<PantallaTablero> {
     final service = widget.roomService!;
     final sala = _salaActual;
     if (sala == null || _enviandoJugada) return;
+    if (sala.paused ||
+        sala.phase != 'partida' ||
+        sala.player(widget.usuario ?? '')?.eliminated == true) {
+      return;
+    }
     final dadoSeleccionado = _bloc.estadoActual.indiceDadoSeleccionado;
     _bloc.agregar(pasada ? PasarTurno() : ColocarFicha());
     final estado = _bloc.estadoActual;
@@ -475,13 +646,17 @@ class _PantallaTableroState extends State<PantallaTablero> {
     if (service == null || sala == null || _enviandoJugada) return;
     try {
       final actualizada = await service.consultar(sala.code);
-      if (mounted) _aplicarSala(actualizada);
+      if (mounted) {
+        _aplicarSala(actualizada);
+        setState(() => _errorSala = null);
+      }
     } catch (error) {
       if (mounted) setState(() => _errorSala = error.toString());
     }
   }
 
   void _aplicarSala(RoomSnapshot sala) {
+    _actualizarRelojPausa(sala);
     final jugador = sala.player(widget.usuario ?? '');
     final anterior = _salaActual;
     final cambioTablero = _forzarSincronizacion ||
@@ -508,6 +683,21 @@ class _PantallaTableroState extends State<PantallaTablero> {
       jugadaEnviada: jugador?.submitted ?? false,
       puntaje: puntaje,
     );
+  }
+
+  void _actualizarRelojPausa(RoomSnapshot sala) {
+    if (sala.paused && sala.pauseDeadline != null) {
+      _relojPausa = DateTime.now();
+      _timerCuentaPausa ??= Timer.periodic(
+        const Duration(seconds: 1),
+        (_) {
+          if (mounted) setState(() => _relojPausa = DateTime.now());
+        },
+      );
+    } else {
+      _timerCuentaPausa?.cancel();
+      _timerCuentaPausa = null;
+    }
   }
 }
 

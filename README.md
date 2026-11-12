@@ -31,3 +31,12 @@ esta configuración para exponer el servidor directamente a Internet.
 
 Las salas viven en memoria: se pueden usar mientras el servidor siga encendido,
 pero se pierden al detenerlo.
+
+## Desconexiones durante una partida
+
+Si un jugador deja de enviar actividad durante 60 segundos, la partida se
+pausa para todos durante un máximo de cinco minutos. Los jugadores conectados
+pueden votar con **Continuar sin el jugador**; con unanimidad, la partida sigue
+sin él. Si regresa antes de que venza el plazo, la partida se reanuda. Al
+terminar los cinco minutos sin unanimidad, el jugador se retira automáticamente.
+En partidas de dos jugadores, gana quien permanece conectado.

@@ -9,12 +9,18 @@ class RoomPlayer {
   final bool ready;
   final bool submitted;
   final int score;
+  final bool connected;
+  final bool eliminated;
+  final bool votedToContinue;
 
   const RoomPlayer({
     required this.username,
     required this.ready,
     required this.submitted,
     required this.score,
+    required this.connected,
+    required this.eliminated,
+    required this.votedToContinue,
   });
 
   factory RoomPlayer.fromJson(Map<String, dynamic> json) => RoomPlayer(
@@ -22,6 +28,9 @@ class RoomPlayer {
         ready: json['ready'] == true,
         submitted: json['submitted'] == true,
         score: json['score'] as int? ?? 0,
+        connected: json['connected'] != false,
+        eliminated: json['eliminated'] == true,
+        votedToContinue: json['votedToContinue'] == true,
       );
 }
 
@@ -37,6 +46,10 @@ class RoomSnapshot {
   final bool allSubmitted;
   final List<dynamic> cells;
   final Map<String, int> scores;
+  final bool paused;
+  final String? disconnectedUsername;
+  final DateTime? pauseDeadline;
+  final String? winner;
 
   const RoomSnapshot({
     required this.code,
@@ -50,6 +63,10 @@ class RoomSnapshot {
     required this.allSubmitted,
     required this.cells,
     required this.scores,
+    required this.paused,
+    required this.disconnectedUsername,
+    required this.pauseDeadline,
+    required this.winner,
   });
 
   factory RoomSnapshot.fromJson(Map<String, dynamic> json) => RoomSnapshot(
@@ -73,6 +90,11 @@ class RoomSnapshot {
         cells: List<dynamic>.from(json['cells'] as List<dynamic>? ?? const []),
         scores: (json['scores'] as Map<String, dynamic>? ?? const {})
             .map((key, value) => MapEntry(key, value as int)),
+        paused: json['paused'] == true,
+        disconnectedUsername: json['disconnectedUsername'] as String?,
+        pauseDeadline:
+            DateTime.tryParse(json['pauseDeadline'] as String? ?? ''),
+        winner: json['winner'] as String?,
       );
 
   RoomPlayer? player(String username) {
@@ -114,6 +136,9 @@ class RoomService {
         'passed': passed,
         'selectedDie': selectedDie,
       });
+
+  Future<RoomSnapshot> votarContinuarSinJugador(String code) =>
+      _post('/${Uri.encodeComponent(code)}/continue', const {});
 
   Future<void> salir(String code) async {
     final response =
