@@ -2,11 +2,26 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  static const String apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:8080/api',
-  );
-  static const String baseUrl = '$apiBaseUrl/auth';
+  static const String _configuredApiBaseUrl =
+      String.fromEnvironment('API_BASE_URL');
+
+  static String get apiBaseUrl {
+    if (_configuredApiBaseUrl.isNotEmpty) return _configuredApiBaseUrl;
+
+    final host = Uri.base.host;
+    if (host.isEmpty || host == 'localhost' || host == '127.0.0.1') {
+      return 'http://localhost:8080/api';
+    }
+
+    return Uri(
+      scheme: 'http',
+      host: host,
+      port: 8080,
+      path: '/api',
+    ).toString();
+  }
+
+  static String get baseUrl => '$apiBaseUrl/auth';
 
   String? _jwtToken;
   String? _currentUser;

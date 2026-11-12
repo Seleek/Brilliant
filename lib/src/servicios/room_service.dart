@@ -84,7 +84,7 @@ class RoomSnapshot {
 }
 
 class RoomService {
-  static const String _baseUrl = '${AuthService.apiBaseUrl}/rooms';
+  String get _baseUrl => '${AuthService.apiBaseUrl}/rooms';
   final AuthService _authService;
 
   RoomService(this._authService);

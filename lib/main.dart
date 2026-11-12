@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'brilliant.dart';
 import 'src/datos/niveles.dart';
 import 'src/ui/pantalla_seleccion_nivel.dart';
+import 'src/ui/reglas_nivel_widget.dart';
 import 'src/servicios/auth_service.dart';
 import 'src/servicios/room_service.dart';
 import 'src/ui/pantalla_auth.dart';
@@ -283,13 +284,17 @@ class _PantallaTableroState extends State<PantallaTablero> {
                         alignment: Alignment.topCenter,
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 320),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              panel,
-                              const SizedBox(height: 16),
-                              boton,
-                            ],
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ReglasNivelWidget(nivel: widget.nivel),
+                                const SizedBox(height: 16),
+                                panel,
+                                const SizedBox(height: 16),
+                                boton,
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -305,6 +310,11 @@ class _PantallaTableroState extends State<PantallaTablero> {
                 child: Column(
                   children: [
                     tablero,
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: 420,
+                      child: ReglasNivelWidget(nivel: widget.nivel),
+                    ),
                     const SizedBox(height: 16),
                     panel,
                     const SizedBox(height: 16),
