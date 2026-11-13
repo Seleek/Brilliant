@@ -255,6 +255,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
                     const SizedBox(height: 16),
                     PanelMano(
                       numerosEnMano: estado.numerosEnMano,
+                      mostrarNumeros: !enTurnos,
                       numerosHabilitados: !enTurnos,
                       indiceSeleccionado:
                           enTurnos ? null : estado.indiceNumeroSeleccionado,

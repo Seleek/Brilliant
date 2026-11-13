@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-class PanelMano extends StatelessWidget {
 
+class PanelMano extends StatelessWidget {
   final List<int> numerosEnMano;
 
   final int? indiceSeleccionado;
@@ -8,6 +8,8 @@ class PanelMano extends StatelessWidget {
   final ValueChanged<int>? onNumeroTocado;
 
   final bool numerosHabilitados;
+
+  final bool mostrarNumeros;
 
   final VoidCallback? onColocarFicha;
 
@@ -19,12 +21,33 @@ class PanelMano extends StatelessWidget {
     this.indiceSeleccionado,
     this.onNumeroTocado,
     this.numerosHabilitados = true,
+    this.mostrarNumeros = true,
     this.onColocarFicha,
     this.onPasar,
   });
 
   @override
   Widget build(BuildContext context) {
+    final acciones = Row(
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            onPressed: onColocarFicha,
+            child: const Text('Colocar ficha'),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: OutlinedButton(
+            onPressed: onPasar,
+            child: const Text('Pasar'),
+          ),
+        ),
+      ],
+    );
+
+    if (!mostrarNumeros) return acciones;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -54,23 +77,7 @@ class PanelMano extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onColocarFicha,
-                    child: const Text('Colocar ficha'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onPasar,
-                    child: const Text('Pasar'),
-                  ),
-                ),
-              ],
-            ),
+            acciones,
           ],
         ),
       ),

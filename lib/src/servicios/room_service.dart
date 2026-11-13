@@ -150,6 +150,7 @@ class RoomService {
   }
 
   Future<RoomSnapshot> _get(String path) async {
+    await AuthService.prepareApiConnection();
     final response = await http.get(
       Uri.parse('$_baseUrl$path'),
       headers: _authService.authenticatedHeaders,
@@ -167,6 +168,7 @@ class RoomService {
     String path,
     Map<String, dynamic> body,
   ) async {
+    await AuthService.prepareApiConnection();
     final uri = Uri.parse('$_baseUrl$path');
     final headers = _authService.authenticatedHeaders;
     switch (method) {
