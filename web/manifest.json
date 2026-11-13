@@ -1,12 +1,12 @@
 {
-    "name": "brilliant",
-    "short_name": "brilliant",
+    "name": "Brilliant",
+    "short_name": "Brilliant",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "description": "Juega Brilliant con tus amigos.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

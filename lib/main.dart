@@ -181,6 +181,10 @@ class _PantallaTableroState extends State<PantallaTablero> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final dimensionDisponible =
+                min(constraints.maxWidth, constraints.maxHeight) - 32;
+            final anchoTablero =
+                dimensionDisponible.clamp(0.0, 420.0).toDouble();
             final juegoBloqueado = widget.roomService != null &&
                 !widget.preparandoSala &&
                 (_salaActual?.paused != false ||
@@ -188,7 +192,8 @@ class _PantallaTableroState extends State<PantallaTablero> {
                     _salaActual?.player(widget.usuario ?? '')?.eliminated ==
                         true);
             final tablero = SizedBox(
-              width: 420,
+              key: const ValueKey('tablero-responsive'),
+              width: anchoTablero,
               child: TableroWidget(
                 bloc: _bloc,
                 tipoPorPosicion: widget.nivel.tipoPorPosicion,
@@ -288,7 +293,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
 
             final boton = _controlesInferiores();
 
-            final esAncho = constraints.maxWidth >= 700;
+            final esAncho = constraints.maxWidth >= 820;
 
             if (esAncho) {
               return Padding(
@@ -317,7 +322,9 @@ class _PantallaTableroState extends State<PantallaTablero> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
                                     children: [
-                                      ReglasNivelWidget(nivel: widget.nivel),
+                                      ReglasNivelWidget(
+                                        nivel: widget.nivel,
+                                      ),
                                       const SizedBox(height: 16),
                                       panel,
                                       const SizedBox(height: 16),
@@ -342,14 +349,20 @@ class _PantallaTableroState extends State<PantallaTablero> {
                 child: Column(
                   children: [
                     if (_mostrarEstadoSala) ...[
-                      SizedBox(width: 420, child: _panelEstadoSala()),
+                      SizedBox(
+                        width: anchoTablero,
+                        child: _panelEstadoSala(),
+                      ),
                       const SizedBox(height: 16),
                     ],
                     tablero,
                     const SizedBox(height: 16),
                     SizedBox(
-                      width: 420,
-                      child: ReglasNivelWidget(nivel: widget.nivel),
+                      width: anchoTablero,
+                      child: ReglasNivelWidget(
+                        nivel: widget.nivel,
+                        expandible: true,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     panel,

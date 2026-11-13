@@ -36,6 +36,24 @@ configuración para exponer el servidor directamente a Internet.
 Las salas viven en memoria: se pueden usar mientras el servidor siga encendido,
 pero se pierden al detenerlo.
 
+## Aplicaciones para Android y iPhone
+
+El proyecto incluye aplicaciones nativas para Android e iOS. Instala la app en
+cada teléfono y conecta todos los dispositivos a la misma red Wi-Fi que el
+servidor. Al iniciar sesión, la app buscará automáticamente el servidor
+Brilliant. En iPhone, acepta el permiso de acceso a la red local cuando se
+solicite. La red debe permitir comunicación entre dispositivos; algunas redes
+de invitados la bloquean.
+
+En Android, genera un APK de prueba con:
+
+```powershell
+flutter build apk --debug
+```
+
+Para instalarla directamente en un teléfono Android conectado por USB, usa
+`flutter run`. Para compilar o instalar la app iOS se necesita macOS con Xcode.
+
 ## Desconexiones durante una partida
 
 Si un jugador deja de enviar actividad durante 60 segundos, la partida se
