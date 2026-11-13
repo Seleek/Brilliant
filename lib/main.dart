@@ -136,6 +136,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
   bool _enviandoJugada = false;
   bool _votandoContinuar = false;
   bool _forzarSincronizacion = false;
+  bool _salidaConfirmada = false;
   DateTime _relojPausa = DateTime.now();
   String? _errorSala;
   RoomSnapshot? _salaActual;
@@ -176,7 +177,7 @@ class _PantallaTableroState extends State<PantallaTablero> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final scaffold = Scaffold(
       appBar: AppBar(title: Text('Brilliant — ${widget.nivel.nombre}')),
       body: SafeArea(
         child: LayoutBuilder(
@@ -376,6 +377,53 @@ class _PantallaTableroState extends State<PantallaTablero> {
         ),
       ),
     );
+
+    return StreamBuilder<TableroEstado>(
+      stream: _bloc.estado,
+      initialData: _bloc.estadoActual,
+      builder: (context, snapshot) {
+        final partidaActiva = widget.roomService != null
+            ? !widget.preparandoSala && _salaActual?.phase == 'partida'
+            : snapshot.data!.partidaIniciada;
+        return PopScope<void>(
+          canPop: !partidaActiva || _salidaConfirmada,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _confirmarSalida(partidaActiva);
+          },
+          child: scaffold,
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmarSalida(bool partidaActiva) async {
+    if (!partidaActiva) return;
+
+    final salir = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Salir de la partida?'),
+        content: const Text(
+          'Si sales ahora, perderás el progreso de esta partida.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Seguir jugando'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Salir'),
+          ),
+        ],
+      ),
+    );
+    if (salir == true && mounted) {
+      setState(() => _salidaConfirmada = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) Navigator.of(context).pop();
+      });
+    }
   }
 
   bool get _mostrarEstadoSala =>
